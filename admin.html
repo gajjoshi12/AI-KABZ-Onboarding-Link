@@ -166,29 +166,6 @@ section.block{padding:clamp(24px,4vw,40px) 0}
 .kv .row .k{color:var(--muted);min-width:140px;flex:none}
 .kv .row .v{color:var(--fg);font-weight:500;word-break:break-word}
 
-/* AI advisor */
-.advisor-card{background:linear-gradient(160deg,var(--surface),var(--surface-2));
-  border:1px solid var(--line);border-radius:var(--r-md);padding:18px 20px;margin-bottom:16px}
-.advisor-card h3{font-family:var(--serif);font-weight:600;font-size:18px;margin-bottom:4px}
-.advisor-card .desc{font-size:12.5px;color:var(--muted);margin-bottom:12px}
-.advice{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
-  padding:18px 22px;font-size:14px;line-height:1.65;min-height:120px}
-.advice.loading{display:flex;align-items:center;justify-content:center;color:var(--muted);
-  font-size:13px;gap:10px}
-.spinner{width:18px;height:18px;border:2.5px solid var(--line-2);border-top-color:var(--accent);
-  border-radius:50%;animation:spin .9s linear infinite}
-@keyframes spin{to{transform:rotate(360deg)}}
-.advice h1,.advice h2{font-family:var(--serif);font-weight:600;margin:18px 0 8px;letter-spacing:-.01em}
-.advice h1{font-size:20px}.advice h2{font-size:16px;color:var(--accent-2)}
-.advice h3{font-size:14px;margin:14px 0 6px;color:var(--fg)}
-.advice p{margin:0 0 10px}
-.advice ul,.advice ol{margin:6px 0 12px;padding-left:22px}
-.advice li{margin-bottom:4px}
-.advice strong{color:var(--accent-2)}
-.advice code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 6px;border-radius:4px}
-.advice em{color:var(--fg-2)}
-.advice-meta{margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--muted-2);letter-spacing:.06em}
-
 /* toast */
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);
   background:var(--fg);color:#fff;padding:11px 20px;border-radius:var(--r-pill);font-size:13px;
@@ -317,22 +294,11 @@ section.block{padding:clamp(24px,4vw,40px) 0}
     </div>
     <div class="drawer-body">
       <div class="tabs">
-        <button class="tabbtn active" data-tab="advisor">AI advisor</button>
-        <button class="tabbtn" data-tab="profile">Full profile</button>
+        <button class="tabbtn active" data-tab="profile">Full profile</button>
         <button class="tabbtn" data-tab="raw">Raw JSON</button>
       </div>
 
-      <div class="tab-pane active" id="tab-advisor">
-        <div class="advisor-card">
-          <h3>How AIKAB delivers for this client</h3>
-          <div class="desc">Claude reads their full profile and writes a concrete plan — recommended setup, modules to activate, a 30/60/90 day plan, expected impact, and watch-outs.</div>
-          <button class="btn btn-primary" id="btnAdvise">✨ Generate recommendation</button>
-        </div>
-        <div class="advice" id="adviceBox">Click the button above to generate a tailored AIKAB rollout plan for this client.</div>
-        <div class="advice-meta" id="adviceMeta"></div>
-      </div>
-
-      <div class="tab-pane" id="tab-profile">
+      <div class="tab-pane active" id="tab-profile">
         <div id="profileArea"></div>
       </div>
 
@@ -516,13 +482,9 @@ function openDrawer(i){
   $('dSub').textContent = `${d.contact?.name || '—'} · ${d.contact?.email || '—'} · submitted ${new Date(activeSub.submittedAt).toLocaleString()}`;
   $('rawArea').textContent = JSON.stringify(activeSub, null, 2);
   $('profileArea').innerHTML = renderProfile(d);
-  $('adviceBox').innerHTML = 'Click <b>Generate recommendation</b> to have Claude write a tailored AIKAB rollout plan for this client.';
-  $('adviceBox').classList.remove('loading');
-  $('adviceMeta').textContent = '';
-  $('btnAdvise').disabled = false; $('btnAdvise').textContent = '✨ Generate recommendation';
-  // reset tabs
-  document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab==='advisor'));
-  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id==='tab-advisor'));
+  // reset tabs — default to the profile tab
+  document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab==='profile'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id==='tab-profile'));
   $('drawer').classList.add('open');
 }
 $('btnClose').addEventListener('click', ()=> $('drawer').classList.remove('open'));
@@ -610,81 +572,6 @@ function renderProfile(d){
   ].join('');
 }
 
-/* ── AI advisor ───────────────────────────────────────────── */
-$('btnAdvise').addEventListener('click', async ()=>{
-  if (!activeSub) return;
-  $('btnAdvise').disabled = true; $('btnAdvise').textContent = 'Thinking…';
-  $('adviceBox').classList.add('loading');
-  $('adviceBox').innerHTML = '<span class="spinner"></span> Claude is reading the profile and writing a recommendation… (~15–30s)';
-  $('adviceMeta').textContent = '';
-  try {
-    const r = await fetch('/api/advise', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', 'x-admin-token': token },
-      body: JSON.stringify({ profile: activeSub.data }),
-    });
-    if (!r.ok) { const j = await r.json().catch(()=>({})); throw new Error(j.error || ('HTTP '+r.status)); }
-    const out = await r.json();
-    $('adviceBox').classList.remove('loading');
-    $('adviceBox').innerHTML = mdToHtml(out.advice || '(no content)');
-    const u = out.usage || {};
-    const cache = u.cache_read_input_tokens ? ` · cache read ${u.cache_read_input_tokens} tok` : '';
-    $('adviceMeta').textContent = `${out.model || ''} · ${u.input_tokens||0} in / ${u.output_tokens||0} out${cache}`;
-    toast('Recommendation ready','✨');
-  } catch (e) {
-    $('adviceBox').classList.remove('loading');
-    $('adviceBox').innerHTML = `<div style="color:var(--danger)">Couldn't generate: ${esc(e.message)}</div>
-      <div style="color:var(--muted);font-size:12px;margin-top:8px">Make sure <code>ANTHROPIC_API_KEY</code> is set on the Vercel deployment.</div>`;
-    toast('Advice failed: '+e.message,'⚠️');
-    $('btnAdvise').disabled = false; $('btnAdvise').textContent = '✨ Generate recommendation';
-    return;
-  }
-  $('btnAdvise').disabled = false; $('btnAdvise').textContent = '↻ Regenerate';
-});
-
-/* ── Tiny Markdown → HTML renderer ───────────────────────── */
-function mdToHtml(md){
-  // Escape first
-  let s = esc(md);
-  // headings
-  s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>')
-       .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
-       .replace(/^# (.+)$/gm,   '<h1>$1</h1>');
-  // bold + italic + inline code
-  s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
-       .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
-       .replace(/`([^`\n]+)`/g, '<code>$1</code>');
-  // lists — group consecutive bullet lines into a <ul>
-  const lines = s.split('\n');
-  const out = [];
-  let inList = false, inOl = false;
-  for (const line of lines) {
-    const ulMatch = /^[-*+]\s+(.+)$/.exec(line);
-    const olMatch = /^\d+\.\s+(.+)$/.exec(line);
-    if (ulMatch) {
-      if (!inList) { out.push('<ul>'); inList = true; }
-      out.push(`<li>${ulMatch[1]}</li>`);
-    } else if (olMatch) {
-      if (!inOl) { out.push('<ol>'); inOl = true; }
-      out.push(`<li>${olMatch[1]}</li>`);
-    } else {
-      if (inList) { out.push('</ul>'); inList = false; }
-      if (inOl)   { out.push('</ol>'); inOl   = false; }
-      out.push(line);
-    }
-  }
-  if (inList) out.push('</ul>');
-  if (inOl)   out.push('</ol>');
-  s = out.join('\n');
-  // paragraphs (group runs of non-tagged lines)
-  s = s.split(/\n{2,}/).map(block => {
-    const t = block.trim();
-    if (!t) return '';
-    if (/^<(h\d|ul|ol|li|p|pre|blockquote|hr|table|strong|em|code)/i.test(t)) return t;
-    return '<p>' + t.replace(/\n/g, '<br/>') + '</p>';
-  }).join('\n');
-  return s;
-}
 </script>
 </body>
 </html>
