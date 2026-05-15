@@ -262,18 +262,20 @@ section.block{padding:clamp(24px,4vw,40px) 0}
 
 <!-- ══ LOGIN GATE ══════════════════════════════════════════════ -->
 <div class="gate" id="gate">
-  <div class="gate-card">
+  <form class="gate-card" id="gateForm" autocomplete="on">
     <h1>AIKAB <span class="serif" style="color:var(--accent);font-style:italic">admin</span></h1>
-    <p>Enter your admin token to view onboarding submissions and generate AIKAB recommendations.</p>
-    <label for="tokenInput">Admin token</label>
-    <input id="tokenInput" type="password" placeholder="paste your ADMIN_TOKEN…" autocomplete="off" />
+    <p>Sign in to view onboarding submissions.</p>
+    <label for="userInput">Username</label>
+    <input id="userInput" name="username" type="text" placeholder="admin" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" />
+    <label for="passInput" style="margin-top:14px">Password</label>
+    <input id="passInput" name="password" type="password" placeholder="admin" autocomplete="current-password" />
     <div class="gate-err" id="gateErr"></div>
-    <button class="btn btn-primary" id="gateGo" style="width:100%;justify-content:center;margin-top:14px">Unlock dashboard →</button>
+    <button type="submit" class="btn btn-primary" id="gateGo" style="width:100%;justify-content:center;margin-top:14px">Unlock dashboard →</button>
     <div class="gate-help">
-      The token must match the <code>ADMIN_TOKEN</code> env var you set on your Railway service.
-      Running locally? Run <code>$env:ADMIN_TOKEN="dev-token"; npm start</code> and open <code>localhost:3000/admin</code>.
+      Default credentials are <code>admin</code> / <code>admin</code>. Change them later by setting the
+      <code>ADMIN_USER</code> and <code>ADMIN_PASS</code> env vars on your Railway service.
     </div>
-  </div>
+  </form>
 </div>
 
 <!-- ══ NAV ═════════════════════════════════════════════════════ -->
@@ -390,10 +392,13 @@ section.block{padding:clamp(24px,4vw,40px) 0}
    AIKAB Admin Panel
    ═══════════════════════════════════════════════════════════════ */
 
-const TOKEN_KEY = 'aikab_admin_token';
-let token = sessionStorage.getItem(TOKEN_KEY) || '';
+const AUTH_KEY = 'aikab_admin_auth';
+// `auth` is the base64-encoded "user:pass" string sent in the
+// Authorization: Basic <auth> header on every admin API call.
+let auth = sessionStorage.getItem(AUTH_KEY) || '';
 let submissions = [];
 let activeSub = null;
+const authHeaders = () => ({ Authorization: 'Basic ' + auth });
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -408,12 +413,14 @@ function toast(msg, icon='✓'){
 }
 
 /* ── Login gate ────────────────────────────────────────────── */
-async function tryToken(t){
-  const r = await fetch('/api/submissions', { headers: { 'x-admin-token': t } });
+// Tries the supplied base64(user:pass) string. On success, persists it for
+// this browser session and loads the dashboard. On failure, throws.
+async function tryAuth(b64){
+  const r = await fetch('/api/submissions', { headers: { Authorization: 'Basic ' + b64 } });
   if (r.ok) {
     const data = await r.json();
-    token = t;
-    sessionStorage.setItem(TOKEN_KEY, t);
+    auth = b64;
+    sessionStorage.setItem(AUTH_KEY, auth);
     $('gate').style.display = 'none';
     submissions = data.submissions || [];
     render();
@@ -423,28 +430,36 @@ async function tryToken(t){
   throw new Error(j.error || ('HTTP '+r.status));
 }
 
-$('gateGo').addEventListener('click', async ()=>{
-  const t = $('tokenInput').value.trim();
-  if (!t) { $('gateErr').textContent = 'Token cannot be empty.'; return; }
+$('gateForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const user = $('userInput').value.trim();
+  const pass = $('passInput').value;
+  if (!user || !pass) { $('gateErr').textContent = 'Enter both username and password.'; return; }
   $('gateErr').textContent = '';
-  $('gateGo').disabled = true; $('gateGo').textContent = 'Checking…';
-  try { await tryToken(t); }
-  catch (e) { $('gateErr').textContent = e.message; $('gateGo').disabled = false; $('gateGo').textContent = 'Unlock dashboard →'; }
+  $('gateGo').disabled = true; $('gateGo').textContent = 'Signing in…';
+  try {
+    // btoa = base64(user:pass) for the Authorization header
+    await tryAuth(btoa(`${user}:${pass}`));
+  } catch (err) {
+    $('gateErr').textContent = err.message;
+    $('gateGo').disabled = false; $('gateGo').textContent = 'Unlock dashboard →';
+  }
 });
-$('tokenInput').addEventListener('keydown', (e)=>{ if (e.key==='Enter') $('gateGo').click(); });
 
 $('btnLogout').addEventListener('click', ()=>{
-  sessionStorage.removeItem(TOKEN_KEY); token=''; location.reload();
+  sessionStorage.removeItem(AUTH_KEY); auth=''; location.reload();
 });
 $('btnRefresh').addEventListener('click', async ()=>{
   $('btnRefresh').disabled = true;
-  try { await tryToken(token); toast('Refreshed','↻'); }
+  try { await tryAuth(auth); toast('Refreshed','↻'); }
   catch(e){ toast(e.message,'⚠️'); }
   $('btnRefresh').disabled = false;
 });
 
-if (token) {
-  tryToken(token).catch(()=>{ /* fall through to gate */ });
+if (auth) {
+  // Returning user — try the stored credential; if it fails (e.g. password
+  // changed server-side), clear it so the gate appears clean.
+  tryAuth(auth).catch(()=>{ sessionStorage.removeItem(AUTH_KEY); auth=''; });
 }
 
 /* ── Analytics rendering ──────────────────────────────────── */
@@ -578,7 +593,7 @@ $('btnDelete').addEventListener('click', async ()=>{
   if (!confirm('Delete this submission? This cannot be undone.')) return;
   try {
     const r = await fetch('/api/submissions?id=' + encodeURIComponent(activeSub.id), {
-      method:'DELETE', headers:{'x-admin-token':token}
+      method:'DELETE', headers: authHeaders()
     });
     if (!r.ok) { const j = await r.json().catch(()=>({})); throw new Error(j.error || ('HTTP '+r.status)); }
     submissions = submissions.filter(s => s !== activeSub);

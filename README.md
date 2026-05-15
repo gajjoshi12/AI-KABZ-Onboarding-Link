@@ -32,7 +32,10 @@ detail drawer with full profile + raw JSON + delete.
 
 ---
 
-## Deploy to Railway (~8 minutes)
+## Deploy to Railway (~5 minutes)
+
+> **Admin login is `admin` / `admin` by default** — no env vars required to get started.
+> See "Changing the admin password" below to lock it down.
 
 ### 1. Push to your GitHub repo
 
@@ -48,50 +51,44 @@ git add . && git commit -m "AIKAB onboarding for Railway" && git push
 3. Railway auto-detects the Node project (via `package.json`), runs `npm install`, then
    `npm start`. **No build step to configure.**
 
-Wait ~60 seconds for the first deploy. Don't open the URL yet — we still need to set
-the admin token and attach a volume so data survives redeploys.
+Wait ~60 seconds for the first deploy.
 
-### 3. Generate an admin token
+### 3. Set the data directory + attach a volume
 
-```powershell
-# PowerShell
-[Convert]::ToBase64String([Guid]::NewGuid().ToByteArray() + [Guid]::NewGuid().ToByteArray())
-```
+So submissions survive redeploys instead of vanishing each time the container restarts.
 
-Copy the output. This is your admin panel password.
+1. Project → click the service → **Variables** tab → **+ New Variable**
+   - Name: `DATA_DIR` · Value: `/data` · Save
+2. Same service → **Settings** tab → scroll to **Volumes** → **+ New Volume**
+   - **Mount path:** `/data` (must match the env var above)
+   - **Size:** 1 GB (plenty for tens of thousands of submissions) → **Create**
 
-### 4. Set environment variables
+`PORT` is injected by Railway automatically — do **not** set it yourself. Railway will
+redeploy after the volume is created.
 
-In your Railway project → click the service → **Variables** tab → **+ New Variable**:
+### 4. Get the public URL
 
-| Name | Value | Purpose |
-|---|---|---|
-| `ADMIN_TOKEN` | the long random string from step 3 | Gates `/admin` + `/api/submissions` |
-| `DATA_DIR` | `/data` | Where submissions get written (matches the volume mount below) |
+Service → **Settings** → **Networking** → **Generate Domain**. You'll get a URL like
+`aikabz-onboarding-production.up.railway.app`.
 
-`PORT` is injected by Railway automatically — do **not** set it yourself.
-
-### 5. Attach a persistent volume
-
-This is the "database" — actually just a disk that survives redeploys.
-
-1. Project → your service → **Settings** tab → scroll to **Volumes** → **+ New Volume**
-2. **Mount path:** `/data`   *(must exactly match the `DATA_DIR` env var)*
-3. **Size:** 1 GB is plenty for tens of thousands of submissions → **Create**
-
-Railway will redeploy the service so the volume can attach.
-
-### 6. Get the public URL
-
-Project → service → **Settings** → **Networking** → **Generate Domain**.
-You'll get something like `aikabz-onboarding-production.up.railway.app`.
-
-### 7. Test it
+### 5. Test it
 
 | URL | What to do |
 |---|---|
 | `https://<your-domain>/`       | Fill the wizard. Last step → click **📨 Send to AIKAB team**. Green toast: `Sent to AIKAB — ref sub_…` |
-| `https://<your-domain>/admin`  | Paste your `ADMIN_TOKEN` → see analytics + your submission. Click it for full profile, raw JSON, delete |
+| `https://<your-domain>/admin`  | Username: `admin` · Password: `admin` → see analytics + your submission. Click it for full profile, raw JSON, delete |
+
+### Changing the admin password
+
+Default `admin`/`admin` is fine for getting started but anyone who finds the URL can sign in.
+To lock it down, in your Railway service → **Variables** tab add:
+
+| Name | Value |
+|---|---|
+| `ADMIN_USER` | a username only you know |
+| `ADMIN_PASS` | a strong password |
+
+Railway redeploys automatically. The next admin login uses the new credentials.
 
 ### Future updates
 
@@ -110,12 +107,12 @@ git add . && git commit -m "tweak: ..." && git push
 ```powershell
 cd C:\Users\Gaj\Desktop\Today\AIKAB\client-onboarding
 npm install
-$env:ADMIN_TOKEN="dev-token-12345"
 npm start
 ```
 
-Open <http://localhost:3000> and <http://localhost:3000/admin>. Submissions land in a
-local `./data/submissions/` folder (gitignored). To start fresh, just delete the folder.
+Open <http://localhost:3000> and <http://localhost:3000/admin> (login: `admin` / `admin`).
+Submissions land in a local `./data/submissions/` folder (gitignored). To start fresh,
+just delete the folder.
 
 ---
 
@@ -133,7 +130,7 @@ local `./data/submissions/` folder (gitignored). To start fresh, just delete the
      │                              )                               │
      │ ◄─ { ok:true, id }                                           │
                                                                     │  GET /api/submissions
-                                                                    │  (x-admin-token header)
+                                                                    │  (Authorization: Basic admin:admin)
                                                        readdir() ◄──┘
                                                           │
                                                           ▼
@@ -145,7 +142,8 @@ local `./data/submissions/` folder (gitignored). To start fresh, just delete the
 
 - **Submissions** are individual JSON files on the mounted volume. Railway snapshots the
   volume automatically; resizing later is also one click.
-- **Admin auth** is a single shared `ADMIN_TOKEN` checked in the `x-admin-token` header.
+- **Admin auth** is HTTP Basic Auth — username/password sent in the `Authorization` header.
+  Defaults to `admin`/`admin`; override with the `ADMIN_USER` / `ADMIN_PASS` env vars in Railway.
 - **No serverless gotchas** — this is a long-running container, so cold starts and
   10-second function limits don't apply.
 
@@ -176,8 +174,8 @@ app uses <1% of that — Hobby covers thousands of submissions per month easily.
 
 - **Change the form questions** — edit the wizard panels in [public/index.html](public/index.html)
   (each `<div class="wiz-panel" data-step="N">`). State persists by `data-k="path.to.field"`.
-- **Rotate the admin token** — change `ADMIN_TOKEN` in Railway → the service redeploys → next
-  admin login uses the new value.
+- **Change the admin password** — set `ADMIN_USER` and/or `ADMIN_PASS` env vars in Railway. The
+  service redeploys and the next admin login uses the new credentials.
 - **Email submissions to your team too** — the form already has an "Email it" button that
   opens the user's mail app. To do it server-side, add SendGrid/Resend in `server.js`
   after the `fs.writeFile()` call.
@@ -188,8 +186,12 @@ app uses <1% of that — Hobby covers thousands of submissions per month easily.
 ## Security notes
 
 - Submissions contain PII (name, email, phone). The volume is private to your service —
-  only your container reads it; nothing is publicly accessible without the admin token.
-- The admin token is a single shared secret. For multiple teammates, give each one their
-  own and check a set of tokens in `adminGate()` instead of one.
+  only your container reads it; nothing is publicly accessible without admin credentials.
+- **The default `admin` / `admin` login is for getting started — anyone who finds the URL can
+  sign in.** Set `ADMIN_USER` and `ADMIN_PASS` env vars on Railway before sharing the link.
+- Admin auth is a single shared username + password. For multiple teammates, replace the
+  `safeEqual` check in `adminGate()` with a lookup against multiple credential pairs.
 - Never commit `.env`, `.env.local`, or your tokens.
+- Credentials are sent as HTTP Basic Auth, which is plain-text — Railway terminates TLS at
+  the edge so the wire is encrypted, but never use this admin panel over plain HTTP.
 - `app.disable('x-powered-by')` is on so we don't advertise the server stack.

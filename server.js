@@ -9,24 +9,30 @@
 //   GET    /                   — serves public/index.html
 //   GET    /admin              — serves public/admin.html
 //
-// Required env vars:
-//   ADMIN_TOKEN  — long random string; gates the admin endpoints + admin page
-// Optional:
-//   PORT         — defaults to 3000 (Railway injects its own PORT automatically)
-//   DATA_DIR     — defaults to ./data (mount a Railway Volume here in production)
+// Admin auth — HTTP Basic Auth. Username and password both default to "admin"
+// so the panel works out of the box with zero setup. Override at any time via
+// env vars (see ADMIN_USER / ADMIN_PASS below).
+//
+// Optional env vars:
+//   ADMIN_USER  — admin username (default "admin")
+//   ADMIN_PASS  — admin password (default "admin")
+//   PORT        — defaults to 3000 (Railway injects its own PORT automatically)
+//   DATA_DIR    — defaults to ./data (mount a Railway Volume here in production)
 
 import express from 'express';
+import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const PORT        = Number(process.env.PORT) || 3000;
-const DATA_DIR    = process.env.DATA_DIR || path.join(__dirname, 'data');
-const SUBS_DIR    = path.join(DATA_DIR, 'submissions');
-const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
-const PUBLIC_DIR  = path.join(__dirname, 'public');
+const PORT       = Number(process.env.PORT) || 3000;
+const DATA_DIR   = process.env.DATA_DIR || path.join(__dirname, 'data');
+const SUBS_DIR   = path.join(DATA_DIR, 'submissions');
+const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'admin';
+const PUBLIC_DIR = path.join(__dirname, 'public');
 
 // Ensure the submissions directory exists at boot
 await fs.mkdir(SUBS_DIR, { recursive: true });
@@ -37,13 +43,34 @@ app.set('trust proxy', 1); // Railway terminates TLS at the edge
 app.use(express.json({ limit: '256kb' }));
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
+// Timing-safe string comparison so attackers can't tell us apart by response time.
+function safeEqual(a, b) {
+  const aBuf = Buffer.from(String(a), 'utf8');
+  const bBuf = Buffer.from(String(b), 'utf8');
+  if (aBuf.length !== bBuf.length) return false;
+  return crypto.timingSafeEqual(aBuf, bBuf);
+}
+
 function adminGate(req, res, next) {
-  if (!ADMIN_TOKEN) {
-    return res.status(500).json({ error: 'ADMIN_TOKEN env var is not set on the server.' });
+  const auth = req.headers.authorization || '';
+  if (!auth.startsWith('Basic ')) {
+    return res.status(401).json({ error: 'Unauthorized — sign in to view the admin panel.' });
   }
-  const token = req.headers['x-admin-token'];
-  if (!token || token !== ADMIN_TOKEN) {
-    return res.status(401).json({ error: 'Unauthorized — bad or missing admin token.' });
+  let user = '', pass = '';
+  try {
+    const decoded = Buffer.from(auth.slice(6).trim(), 'base64').toString('utf8');
+    const i = decoded.indexOf(':');
+    if (i === -1) throw new Error('bad format');
+    user = decoded.slice(0, i);
+    pass = decoded.slice(i + 1);
+  } catch {
+    return res.status(401).json({ error: 'Unauthorized — malformed credentials.' });
+  }
+  // Always run both comparisons to avoid early-exit timing leaks
+  const okUser = safeEqual(user, ADMIN_USER);
+  const okPass = safeEqual(pass, ADMIN_PASS);
+  if (!okUser || !okPass) {
+    return res.status(401).json({ error: 'Unauthorized — wrong username or password.' });
   }
   next();
 }
@@ -139,5 +166,5 @@ app.use((req, res) => {
 app.listen(PORT, () => {
   console.log(`AIKAB onboarding listening on :${PORT}`);
   console.log(`  data dir: ${DATA_DIR}`);
-  console.log(`  admin token: ${ADMIN_TOKEN ? '✓ set' : '✗ MISSING — set ADMIN_TOKEN env var'}`);
+  console.log(`  admin login: ${ADMIN_USER} / ${ADMIN_PASS === 'admin' ? 'admin (default — change ADMIN_PASS to override)' : '••••••••'}`);
 });
