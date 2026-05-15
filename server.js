@@ -1,4 +1,4 @@
-// AIKAB onboarding — Express server for Railway.
+// AIKABZ onboarding — Express server for Railway.
 // Serves the public/ folder and exposes three JSON endpoints backed by a
 // persistent volume that stores submissions as plain JSON files (no database).
 //
@@ -164,7 +164,7 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`AIKAB onboarding listening on :${PORT}`);
+  console.log(`AIKABZ onboarding listening on :${PORT}`);
   console.log(`  data dir: ${DATA_DIR}`);
   console.log(`  admin login: ${ADMIN_USER} / ${ADMIN_PASS === 'admin' ? 'admin (default — change ADMIN_PASS to override)' : '••••••••'}`);
 });

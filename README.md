@@ -1,4 +1,4 @@
-# AIKAB — Client Onboarding + Admin Panel
+# AIKABZ — Client Onboarding + Admin Panel
 
 A tiny Express server with two HTML pages and three JSON endpoints. **No database.**
 Submissions are saved as plain JSON files to a persistent disk (a Railway Volume in production).
@@ -40,8 +40,8 @@ detail drawer with full profile + raw JSON + delete.
 ### 1. Push to your GitHub repo
 
 ```powershell
-cd C:\Users\Gaj\Desktop\Today\AIKAB\client-onboarding
-git add . && git commit -m "AIKAB onboarding for Railway" && git push
+cd C:\Users\Gaj\Desktop\Today\AIKABZ\client-onboarding
+git add . && git commit -m "AIKABZ onboarding for Railway" && git push
 ```
 
 ### 2. Create a Railway project from the repo
@@ -75,7 +75,7 @@ Service → **Settings** → **Networking** → **Generate Domain**. You'll get 
 
 | URL | What to do |
 |---|---|
-| `https://<your-domain>/`       | Fill the wizard. Last step → click **📨 Send to AIKAB team**. Green toast: `Sent to AIKAB — ref sub_…` |
+| `https://<your-domain>/`       | Fill the wizard. Last step → click **📨 Send to AIKABZ team**. Green toast: `Sent to AIKABZ — ref sub_…` |
 | `https://<your-domain>/admin`  | Username: `admin` · Password: `admin` → see analytics + your submission. Click it for full profile, raw JSON, delete |
 
 ### Changing the admin password
@@ -95,7 +95,7 @@ Railway redeploys automatically. The next admin login uses the new credentials.
 Every `git push` to `main` auto-redeploys. The volume + env vars stick around between deploys.
 
 ```powershell
-cd C:\Users\Gaj\Desktop\Today\AIKAB\client-onboarding
+cd C:\Users\Gaj\Desktop\Today\AIKABZ\client-onboarding
 # make changes
 git add . && git commit -m "tweak: ..." && git push
 ```
@@ -105,7 +105,7 @@ git add . && git commit -m "tweak: ..." && git push
 ## Local development
 
 ```powershell
-cd C:\Users\Gaj\Desktop\Today\AIKAB\client-onboarding
+cd C:\Users\Gaj\Desktop\Today\AIKABZ\client-onboarding
 npm install
 npm start
 ```

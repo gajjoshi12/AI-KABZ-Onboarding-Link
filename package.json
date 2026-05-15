@@ -1,9 +1,9 @@
 {
-  "name": "aikab-client-onboarding",
+  "name": "aikabz-client-onboarding",
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "AIKAB client onboarding form + admin panel (Express on Railway, no database)",
+  "description": "AIKABZ client onboarding form + admin panel (Express on Railway, no database)",
   "engines": {
     "node": ">=18"
   },
