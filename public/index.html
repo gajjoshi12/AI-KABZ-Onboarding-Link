@@ -167,6 +167,35 @@ select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg width='1
 .chip.sel{background:var(--accent-3); border-color:var(--accent); color:var(--accent-2); font-weight:600}
 .chip.sel::before{content:'✓'; font-size:11px; font-weight:700}
 
+/* sub-labels above each chip group */
+.sub-label{font-family:var(--mono); font-size:10px; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--muted); margin:18px 0 8px}
+.field > .sub-label:first-of-type{margin-top:6px}
+
+/* + Add custom service (dashed pill button) */
+.chip-add{border-style:dashed; color:var(--accent); background:transparent;
+  font-family:var(--sans); font-weight:600}
+.chip-add::before{content:none !important}
+.chip-add:hover{background:var(--accent-3); border-style:solid; color:var(--accent-2)}
+
+/* custom-added chip with × remove control */
+.chip-custom{padding-right:34px; position:relative}
+.chip-custom .chip-x{position:absolute; right:5px; top:50%; transform:translateY(-50%);
+  background:none; border:none; font-size:15px; line-height:1; cursor:pointer;
+  padding:0; width:22px; height:22px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--muted-2); opacity:.7; transition:.15s}
+.chip-custom .chip-x:hover{opacity:1; color:var(--danger); background:var(--danger-soft)}
+.chip-custom.sel .chip-x{color:rgba(255,255,255,.8)}
+.chip-custom.sel .chip-x:hover{color:#fff; background:rgba(255,255,255,.18)}
+
+/* inline input that replaces the + Add button while typing */
+.chip-input{font-family:var(--sans); font-size:14px;
+  border:1px dashed var(--accent); border-radius:var(--r-pill);
+  padding:9px 14px; background:var(--surface); color:var(--fg);
+  outline:none; min-width:220px; max-width:100%}
+.chip-input:focus{border-style:solid; box-shadow:0 0 0 3px var(--accent-3)}
+
 .optgrid{display:grid; grid-template-columns:1fr; gap:11px}
 @media(min-width:560px){.optgrid{grid-template-columns:1fr 1fr}}
 .opt{border:1px solid var(--line-2); border-radius:var(--r-md); padding:14px 15px; cursor:pointer;
@@ -687,10 +716,12 @@ footer .fcols{display:flex;gap:30px;font-size:13px;flex-wrap:wrap}
 
         <!-- STEP 3 — Services -->
         <div class="wiz-panel" data-step="2">
-          <h3>What treatments do you offer?</h3>
-          <p class="sub">We'll pre-load follow-up protocols for each one — Botox checks in at day 14, microneedling at day 3, laser packages track session-by-session.</p>
+          <h3>What do you offer?</h3>
+          <p class="sub">Pick everything that applies — across med-spa treatments, general spa services, or both. We'll pre-load the right follow-up cadence for each (Botox checks in at day 14, microneedling at day 3, massage rebook nudges at your typical re-book window).</p>
           <div class="field">
-            <label>Treatments &amp; services <span style="color:var(--muted);font-weight:400">(pick all that apply)</span></label>
+            <label>Your services <span style="color:var(--muted);font-weight:400">(tap to select — or add your own at the bottom)</span></label>
+
+            <div class="sub-label">Med-spa &amp; aesthetic treatments</div>
             <div class="chips" data-multi="services.list">
               <span class="chip" data-val="Botox / neurotoxins">Botox / neurotoxins</span>
               <span class="chip" data-val="Dermal fillers">Dermal fillers</span>
@@ -704,6 +735,31 @@ footer .fcols{display:flex;gap:30px;font-size:13px;flex-wrap:wrap}
               <span class="chip" data-val="Hormone / weight management">Hormone / weight management</span>
               <span class="chip" data-val="PRP / hair restoration">PRP / hair restoration</span>
               <span class="chip" data-val="Medical-grade skincare retail">Medical-grade skincare retail</span>
+            </div>
+
+            <div class="sub-label">Spa, beauty &amp; wellness</div>
+            <div class="chips" data-multi="services.list">
+              <span class="chip" data-val="Swedish / deep-tissue massage">Swedish / deep-tissue massage</span>
+              <span class="chip" data-val="Hot stone / aromatherapy massage">Hot stone / aromatherapy massage</span>
+              <span class="chip" data-val="Couples / prenatal massage">Couples / prenatal massage</span>
+              <span class="chip" data-val="Classic / European facials">Classic / European facials</span>
+              <span class="chip" data-val="Body scrubs &amp; wraps">Body scrubs &amp; wraps</span>
+              <span class="chip" data-val="Manicure &amp; pedicure">Manicure &amp; pedicure</span>
+              <span class="chip" data-val="Waxing / threading / sugaring">Waxing / threading / sugaring</span>
+              <span class="chip" data-val="Eyelash extensions / lash lift">Eyelash extensions / lash lift</span>
+              <span class="chip" data-val="Brow shaping / tinting / lamination">Brow shaping / tinting / lamination</span>
+              <span class="chip" data-val="Spray tanning">Spray tanning</span>
+              <span class="chip" data-val="Sauna / steam / infrared">Sauna / steam / infrared</span>
+              <span class="chip" data-val="Float tank / salt therapy">Float tank / salt therapy</span>
+              <span class="chip" data-val="Reflexology">Reflexology</span>
+              <span class="chip" data-val="Reiki / energy work">Reiki / energy work</span>
+              <span class="chip" data-val="Hair salon services">Hair salon services</span>
+              <span class="chip" data-val="Yoga / pilates / movement classes">Yoga / pilates / movement classes</span>
+            </div>
+
+            <div class="sub-label">Anything else? Add your own</div>
+            <div class="chips" id="customChipsGroup">
+              <button type="button" class="chip chip-add" id="addCustomChip">+ Add a custom service</button>
             </div>
           </div>
           <div class="field">
@@ -1918,6 +1974,99 @@ document.querySelectorAll('.faq-q').forEach(q=>{
 /* ════════════════════════════════════════════════════════════
    INIT
    ════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════
+   CUSTOM SERVICES — "+ Add custom" flow
+   ════════════════════════════════════════════════════════════ */
+(function customServicesFlow(){
+  const SERVICES_KEY = 'services.list';
+  const customGroup = document.getElementById('customChipsGroup');
+  const addBtn = document.getElementById('addCustomChip');
+  if (!customGroup || !addBtn) return;
+
+  // Every value that already has a static (pre-defined) chip somewhere on the page
+  const staticVals = new Set(
+    [...document.querySelectorAll('[data-multi="services.list"] .chip[data-val]')]
+      .map(c => c.dataset.val)
+  );
+
+  function addCustomChip(val, selected){
+    if (!val) return;
+    // If the value matches an existing static chip, just select that one
+    const matchStatic = [...document.querySelectorAll('[data-multi="services.list"] .chip[data-val]')]
+      .find(c => c.dataset.val === val);
+    if (matchStatic){ if (!matchStatic.classList.contains('sel')) matchStatic.click(); return; }
+    // De-dupe — skip if a custom chip with the same value already exists
+    if ([...customGroup.querySelectorAll('.chip-custom')].some(c => c.dataset.val === val)) return;
+
+    const chip = document.createElement('span');
+    chip.className = 'chip chip-custom' + (selected ? ' sel' : '');
+    chip.dataset.val = val;
+    chip.dataset.custom = '1';
+    chip.appendChild(document.createTextNode(val));
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'chip-x';
+    x.setAttribute('aria-label', 'Remove');
+    x.textContent = '×';
+    chip.appendChild(x);
+
+    // Click body → toggle selection (matches the static chip behavior)
+    chip.addEventListener('click', (e)=>{
+      if (e.target === x || e.target.closest('.chip-x')) return;
+      let arr = (getPath(data, SERVICES_KEY) || []).slice();
+      const isOn = chip.classList.toggle('sel');
+      if (isOn && !arr.includes(val)) arr.push(val);
+      if (!isOn) arr = arr.filter(v => v !== val);
+      setPath(data, SERVICES_KEY, arr); saveState();
+    });
+    // Click × → remove the chip AND drop the value from the array
+    x.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      const arr = (getPath(data, SERVICES_KEY) || []).filter(v => v !== val);
+      setPath(data, SERVICES_KEY, arr); saveState();
+      chip.remove();
+    });
+
+    customGroup.insertBefore(chip, addBtn);
+
+    if (selected){
+      const arr = (getPath(data, SERVICES_KEY) || []).slice();
+      if (!arr.includes(val)){ arr.push(val); setPath(data, SERVICES_KEY, arr); saveState(); }
+    }
+  }
+
+  // "+ Add a custom service" → swap to an input → Enter to commit, Esc to cancel
+  addBtn.addEventListener('click', ()=>{
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.className = 'chip-input';
+    input.placeholder = 'e.g. Sound bath, Cryotherapy, Cupping…';
+    input.maxLength = 60;
+    addBtn.style.display = 'none';
+    customGroup.insertBefore(input, addBtn);
+    input.focus();
+
+    let settled = false;
+    const finish = (commit)=>{
+      if (settled) return; settled = true;
+      const val = (input.value || '').trim().slice(0, 60);
+      input.remove();
+      addBtn.style.display = '';
+      if (commit && val) addCustomChip(val, true);
+    };
+    input.addEventListener('blur', ()=> finish(true));
+    input.addEventListener('keydown', (e)=>{
+      if (e.key === 'Enter'){ e.preventDefault(); finish(true); }
+      else if (e.key === 'Escape'){ e.preventDefault(); input.value = ''; finish(false); }
+    });
+  });
+
+  // Rehydrate any custom values from saved state on page load
+  ((getPath(data, SERVICES_KEY) || []).slice()).forEach(v => {
+    if (!staticVals.has(v)) addCustomChip(v, true);
+  });
+})();
+
 goStep(0);
 // if returning user has data, jump them a friendly note
 if(data.spa && data.spa.name){
