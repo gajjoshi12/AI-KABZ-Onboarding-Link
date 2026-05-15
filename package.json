@@ -1,0 +1,14 @@
+{
+  "name": "aikab-client-onboarding",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "AIKAB client onboarding form + admin panel (Vercel static site + serverless functions)",
+  "scripts": {
+    "dev": "vercel dev"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.0",
+    "@vercel/blob": "^1.1.1"
+  }
+}

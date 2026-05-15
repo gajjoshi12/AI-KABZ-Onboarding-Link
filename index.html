@@ -1,0 +1,1915 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AIKAB — Client Onboarding & Walkthrough</title>
+<meta name="description" content="Tell us about your med spa, then watch AIKAB explained — interactively, with live examples." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════
+   AIKAB — Client Onboarding & Walkthrough
+   Single-file, dependency-free, fully interactive.
+   ════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#FAF7F2; --surface:#FFFFFF; --surface-2:#F3EEE4; --surface-3:#EAE3D4;
+  --line:#E8E1D2; --line-2:#D1C8B4;
+  --fg:#2A2A28; --fg-2:#4A4A46; --muted:#7A7568; --muted-2:#9E988A;
+  --accent:#3F7A66; --accent-2:#2E5C4D; --accent-3:#E1EDE6; --accent-fg:#FFFFFF;
+  --gold:#B58A3E; --gold-soft:#F1E6CE;
+  --success:#4F8A5B; --warning:#B58A3E; --danger:#B0473F; --danger-soft:#F6E3E1;
+  --r-sm:8px; --r-md:12px; --r-lg:18px; --r-pill:999px;
+  --serif:'Fraunces', Georgia, serif;
+  --sans:'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --shadow-sm:0 1px 2px rgba(20,30,25,.05), 0 2px 6px rgba(20,30,25,.04);
+  --shadow:0 14px 44px -16px rgba(16,32,24,.22);
+  --shadow-lg:0 30px 70px -22px rgba(16,32,24,.32);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:var(--sans); font-size:15px; line-height:1.6;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+.serif{font-family:var(--serif); font-weight:400}
+.italic{font-style:italic}
+.mono{font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted)}
+.wrap{max-width:1080px; margin:0 auto; padding:0 clamp(18px,5vw,48px)}
+h1,h2,h3,h4{margin:0; font-weight:600; letter-spacing:-.02em; line-height:1.18}
+h1{font-family:var(--serif); font-weight:500; font-size:clamp(34px,5.4vw,58px); letter-spacing:-.03em}
+h2{font-family:var(--serif); font-weight:500; font-size:clamp(26px,3.6vw,40px); letter-spacing:-.025em}
+h3{font-size:20px}
+p{margin:0 0 14px}
+a{color:var(--accent)}
+.em{color:var(--accent); font-style:italic; font-family:var(--serif)}
+.center{text-align:center}
+.hidden{display:none !important}
+
+/* ── Background blobs ───────────────────────────────────────── */
+.blob{position:fixed; border-radius:50%; filter:blur(60px); opacity:.5; z-index:0; pointer-events:none}
+.blob.b1{width:420px;height:420px;background:#D9E8DF;top:-160px;right:-120px}
+.blob.b2{width:380px;height:380px;background:#F1E6CE;bottom:-160px;left:-140px;opacity:.6}
+
+/* ── Nav ────────────────────────────────────────────────────── */
+.nav{position:sticky; top:0; z-index:60;
+  background:rgba(250,247,242,.86); backdrop-filter:blur(14px) saturate(1.2);
+  -webkit-backdrop-filter:blur(14px) saturate(1.2); border-bottom:1px solid var(--line)}
+.nav-inner{max-width:1080px; margin:0 auto; padding:12px clamp(18px,5vw,48px);
+  display:flex; align-items:center; justify-content:space-between; gap:16px}
+.brand{display:flex; align-items:center; gap:10px; text-decoration:none; color:var(--fg)}
+.brand-mark{width:26px;height:26px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  border-radius:7px; position:relative; box-shadow:0 0 0 4px rgba(63,122,102,.12); flex:none}
+.brand-mark::after{content:'';position:absolute;inset:6px;background:#fff;border-radius:3px;opacity:.28}
+.brand-mark::before{content:'';position:absolute;width:6px;height:6px;background:#fff;border-radius:50%;
+  right:5px;bottom:5px;opacity:.9}
+.brand-name{font-weight:600; letter-spacing:-.02em; font-size:16px}
+.brand-name span{color:var(--muted); font-weight:400}
+.nav-links{display:none; gap:6px; align-items:center}
+.nav-links button{background:none;border:none;font-family:var(--sans);font-size:13px;color:var(--fg-2);
+  cursor:pointer;padding:7px 12px;border-radius:var(--r-pill);transition:.18s}
+.nav-links button:hover{background:var(--surface-2);color:var(--accent)}
+.nav-links button.active{background:var(--accent-3);color:var(--accent-2);font-weight:600}
+@media(min-width:880px){.nav-links{display:flex}}
+.nav-progress{position:absolute;left:0;bottom:-1px;height:2px;background:var(--accent);
+  width:0%;transition:width .4s ease}
+
+/* ── Buttons ────────────────────────────────────────────────── */
+.btn{font-family:var(--sans); font-size:14px; font-weight:600; cursor:pointer;
+  border-radius:var(--r-pill); padding:11px 22px; border:1px solid transparent;
+  transition:transform .12s ease, box-shadow .18s, background .18s; display:inline-flex;
+  align-items:center; gap:8px; text-decoration:none}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn-primary{background:var(--accent); color:#fff; box-shadow:0 6px 18px -6px rgba(63,122,102,.6)}
+.btn-primary:hover{background:var(--accent-2); box-shadow:0 10px 26px -8px rgba(63,122,102,.7)}
+.btn-ghost{background:var(--surface); color:var(--fg-2); border-color:var(--line-2)}
+.btn-ghost:hover{background:var(--surface-2); color:var(--accent)}
+.btn-dark{background:var(--fg); color:#fff}
+.btn-dark:hover{background:#000}
+.btn:disabled{opacity:.4; cursor:not-allowed; transform:none}
+.btn-sm{padding:8px 16px; font-size:13px}
+
+/* ── Hero ───────────────────────────────────────────────────── */
+.hero{position:relative; z-index:1; padding:clamp(60px,9vw,110px) 0 clamp(40px,6vw,70px); text-align:center}
+.eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--surface);
+  border:1px solid var(--line-2);border-radius:var(--r-pill);padding:6px 14px 6px 8px;
+  font-size:12px;color:var(--fg-2);margin-bottom:26px;box-shadow:var(--shadow-sm)}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--success);
+  box-shadow:0 0 0 4px rgba(79,138,91,.18); animation:pulse 2.4s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px rgba(79,138,91,.18)}50%{box-shadow:0 0 0 7px rgba(79,138,91,.05)}}
+.hero p.lead{font-size:clamp(16px,2vw,19px); color:var(--fg-2); max-width:620px; margin:22px auto 30px}
+.hero-cta{display:flex; gap:12px; justify-content:center; flex-wrap:wrap}
+.hero-stats{display:flex;gap:34px;justify-content:center;flex-wrap:wrap;margin-top:54px}
+.hero-stat{text-align:center}
+.hero-stat .n{font-family:var(--serif);font-size:34px;color:var(--accent-2);font-weight:600}
+.hero-stat .l{font-size:12px;color:var(--muted);letter-spacing:.04em}
+
+/* ── Section scaffolding ────────────────────────────────────── */
+section.block{position:relative; z-index:1; padding:clamp(40px,6vw,84px) 0; scroll-margin-top:70px}
+.sec-head{margin-bottom:34px}
+.sec-head .mono{display:block; margin-bottom:12px}
+.sec-head p{color:var(--fg-2); max-width:620px; margin-top:12px}
+.divider{height:1px;background:linear-gradient(90deg,transparent,var(--line-2),transparent);margin:0}
+
+/* ── Card ───────────────────────────────────────────────────── */
+.card{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+  box-shadow:var(--shadow); padding:clamp(22px,3.5vw,40px)}
+
+/* ════ PART 1 — INTERACTIVE INTAKE WIZARD ════════════════════ */
+.wizard{background:var(--surface); border:1px solid var(--line); border-radius:var(--r-lg);
+  box-shadow:var(--shadow-lg); overflow:hidden}
+.wiz-top{padding:20px clamp(20px,3.5vw,38px); border-bottom:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between; gap:16px; background:var(--surface-2)}
+.wiz-steps{display:flex; gap:6px; flex-wrap:wrap}
+.wiz-dot{width:30px;height:6px;border-radius:var(--r-pill);background:var(--surface-3);transition:.3s}
+.wiz-dot.done{background:var(--accent)}
+.wiz-dot.current{background:var(--accent); box-shadow:0 0 0 3px var(--accent-3)}
+.wiz-stepnum{font-size:12px; color:var(--muted); white-space:nowrap; font-family:var(--mono);
+  letter-spacing:.1em}
+.wiz-body{padding:clamp(24px,4vw,46px); min-height:380px}
+.wiz-panel{display:none; animation:slideIn .42s cubic-bezier(.22,1,.36,1)}
+.wiz-panel.active{display:block}
+@keyframes slideIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+.wiz-panel h3{font-family:var(--serif);font-weight:500;font-size:clamp(22px,3vw,30px);margin-bottom:6px}
+.wiz-panel .sub{color:var(--muted); margin-bottom:26px; font-size:14px}
+.wiz-foot{padding:18px clamp(20px,3.5vw,38px); border-top:1px solid var(--line);
+  display:flex; align-items:center; justify-content:space-between; gap:14px; background:var(--surface-2)}
+.wiz-foot .hint{font-size:12px;color:var(--muted)}
+
+/* form bits */
+.field{margin-bottom:20px}
+.field > label{display:block; font-size:13px; font-weight:600; color:var(--fg);
+  margin-bottom:7px; letter-spacing:-.01em}
+.field .help{font-size:12px; color:var(--muted); margin:-2px 0 8px}
+.grid2{display:grid; grid-template-columns:1fr; gap:18px}
+@media(min-width:640px){.grid2{grid-template-columns:1fr 1fr}}
+input[type=text],input[type=email],input[type=tel],input[type=number],textarea,select{
+  width:100%; font-family:var(--sans); font-size:14px; color:var(--fg);
+  background:var(--bg); border:1px solid var(--line-2); border-radius:var(--r-md);
+  padding:11px 13px; transition:.16s; outline:none}
+textarea{resize:vertical; min-height:84px; line-height:1.55}
+input:focus,textarea:focus,select:focus{border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-3); background:var(--surface)}
+select{appearance:none; background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%237A7568' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat; background-position:right 13px center; padding-right:34px}
+
+/* choice chips / cards */
+.chips{display:flex; flex-wrap:wrap; gap:9px}
+.chip{font-size:13px; padding:9px 15px; border-radius:var(--r-pill); cursor:pointer;
+  background:var(--bg); border:1px solid var(--line-2); color:var(--fg-2); transition:.15s;
+  user-select:none; display:inline-flex; align-items:center; gap:7px}
+.chip:hover{border-color:var(--accent); color:var(--accent)}
+.chip.sel{background:var(--accent-3); border-color:var(--accent); color:var(--accent-2); font-weight:600}
+.chip.sel::before{content:'✓'; font-size:11px; font-weight:700}
+
+.optgrid{display:grid; grid-template-columns:1fr; gap:11px}
+@media(min-width:560px){.optgrid{grid-template-columns:1fr 1fr}}
+.opt{border:1px solid var(--line-2); border-radius:var(--r-md); padding:14px 15px; cursor:pointer;
+  background:var(--bg); transition:.16s; display:flex; gap:12px; align-items:flex-start}
+.opt:hover{border-color:var(--accent); transform:translateY(-1px); box-shadow:var(--shadow-sm)}
+.opt.sel{border-color:var(--accent); background:var(--accent-3); box-shadow:0 0 0 1px var(--accent)}
+.opt .ico{font-size:20px; line-height:1; flex:none}
+.opt .ttl{font-weight:600; font-size:14px; margin-bottom:2px}
+.opt .desc{font-size:12px; color:var(--muted); line-height:1.45}
+.opt.sel .desc{color:var(--accent-2)}
+
+/* rank list (pain points) */
+.rank{display:flex; flex-direction:column; gap:9px}
+.rank-item{display:flex; align-items:center; gap:12px; padding:12px 14px; background:var(--bg);
+  border:1px solid var(--line-2); border-radius:var(--r-md); cursor:pointer; transition:.15s}
+.rank-item:hover{border-color:var(--accent)}
+.rank-item.sel{border-color:var(--accent); background:var(--accent-3)}
+.rank-badge{width:26px;height:26px;border-radius:50%;background:var(--surface-3);color:var(--muted);
+  display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex:none;transition:.2s}
+.rank-item.sel .rank-badge{background:var(--accent); color:#fff}
+.rank-item .rk-txt{flex:1}
+.rank-item .rk-txt .t{font-weight:600; font-size:14px}
+.rank-item .rk-txt .d{font-size:12px; color:var(--muted)}
+.rank-item .rk-emoji{font-size:20px}
+
+/* sliders */
+.slider-row{margin-bottom:22px}
+.slider-row .sl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px}
+.slider-row .sl-label{font-size:13px;font-weight:600}
+.slider-row .sl-val{font-family:var(--mono);font-size:13px;color:var(--accent-2);
+  background:var(--accent-3);padding:2px 9px;border-radius:var(--r-pill)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:var(--r-pill);
+  background:var(--surface-3);outline:none;margin:6px 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;
+  border-radius:50%;background:var(--accent);cursor:pointer;border:3px solid #fff;
+  box-shadow:0 2px 8px rgba(63,122,102,.5)}
+input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:var(--accent);
+  cursor:pointer;border:3px solid #fff;box-shadow:0 2px 8px rgba(63,122,102,.5)}
+.sl-scale{display:flex;justify-content:space-between;font-size:11px;color:var(--muted-2)}
+
+/* tier selector */
+.tier-grid{display:grid; grid-template-columns:1fr; gap:14px}
+@media(min-width:760px){.tier-grid{grid-template-columns:repeat(3,1fr)}}
+.tier{border:1px solid var(--line-2); border-radius:var(--r-lg); padding:20px; cursor:pointer;
+  background:var(--bg); transition:.18s; position:relative; display:flex; flex-direction:column}
+.tier:hover{transform:translateY(-3px); box-shadow:var(--shadow)}
+.tier.sel{border-color:var(--accent); box-shadow:0 0 0 2px var(--accent), var(--shadow)}
+.tier .tg{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);
+  font-family:var(--mono)}
+.tier .tn{font-family:var(--serif);font-size:21px;font-weight:600;margin:4px 0 2px}
+.tier .tp{font-size:13px;color:var(--accent-2);font-weight:600;margin-bottom:10px}
+.tier .tp b{font-size:22px;font-family:var(--serif)}
+.tier ul{margin:0;padding:0;list-style:none;font-size:12.5px;color:var(--fg-2);flex:1}
+.tier ul li{padding:4px 0 4px 18px;position:relative}
+.tier ul li::before{content:'';position:absolute;left:0;top:11px;width:6px;height:6px;
+  border-radius:50%;background:var(--accent)}
+.tier .rec{position:absolute;top:-10px;right:14px;background:var(--gold);color:#fff;font-size:10px;
+  font-weight:700;letter-spacing:.08em;padding:3px 9px;border-radius:var(--r-pill);
+  text-transform:uppercase;box-shadow:var(--shadow-sm)}
+.reco-banner{background:var(--accent-3);border:1px solid var(--accent);border-radius:var(--r-md);
+  padding:14px 16px;font-size:13.5px;color:var(--accent-2);margin-bottom:20px;display:flex;gap:10px}
+.reco-banner b{color:var(--accent-2)}
+
+/* ── Review / summary ───────────────────────────────────────── */
+.summary-box{background:var(--bg);border:1px dashed var(--line-2);border-radius:var(--r-md);
+  padding:20px;font-size:13.5px;line-height:1.7;max-height:340px;overflow:auto}
+.summary-box h4{font-family:var(--serif);font-weight:600;font-size:15px;margin:16px 0 4px;color:var(--accent-2)}
+.summary-box h4:first-child{margin-top:0}
+.summary-box .row{display:flex;gap:8px;padding:2px 0;border-bottom:1px dotted var(--line)}
+.summary-box .row .k{color:var(--muted);min-width:150px;flex:none}
+.summary-box .row .v{color:var(--fg);font-weight:500}
+.success-banner{display:none; background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  color:#fff;border-radius:var(--r-md);padding:18px 20px;margin-bottom:18px;align-items:center;gap:14px}
+.success-banner.show{display:flex; animation:slideIn .5s}
+.success-banner .big{font-size:28px}
+.actions-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+
+/* ════ PART 2 — INTERACTIVE FUNCTIONALITY WALKTHROUGH ════════ */
+.feature-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:26px}
+.feature-tab{background:var(--surface);border:1px solid var(--line-2);border-radius:var(--r-pill);
+  padding:9px 16px;font-size:13px;font-weight:500;cursor:pointer;color:var(--fg-2);transition:.16s;
+  display:flex;align-items:center;gap:8px}
+.feature-tab:hover{border-color:var(--accent);color:var(--accent)}
+.feature-tab.active{background:var(--accent);color:#fff;border-color:var(--accent);
+  box-shadow:0 6px 16px -6px rgba(63,122,102,.6)}
+.feature-tab .tnum{font-family:var(--mono);font-size:10px;opacity:.7}
+
+.feature-stage{display:none}
+.feature-stage.active{display:grid; gap:28px; animation:slideIn .42s}
+@media(min-width:860px){.feature-stage.active{grid-template-columns:1fr 1fr; align-items:center}}
+
+.feat-copy .tag{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;
+  color:var(--accent-2);background:var(--accent-3);padding:4px 10px;border-radius:var(--r-pill);
+  margin-bottom:12px}
+.feat-copy h3{font-family:var(--serif);font-weight:500;font-size:clamp(22px,3vw,30px);margin-bottom:10px}
+.feat-copy p{color:var(--fg-2);font-size:14.5px}
+.feat-copy .eg{background:var(--surface-2);border-left:3px solid var(--accent);border-radius:0 var(--r-md) var(--r-md) 0;
+  padding:12px 15px;font-size:13.5px;color:var(--fg-2);margin:14px 0}
+.feat-copy .eg b{color:var(--accent-2)}
+.feat-bullets{list-style:none;padding:0;margin:14px 0}
+.feat-bullets li{font-size:13.5px;color:var(--fg-2);padding:5px 0 5px 26px;position:relative}
+.feat-bullets li::before{content:'→';position:absolute;left:0;color:var(--accent);font-weight:700}
+
+/* demo canvas */
+.demo{background:linear-gradient(160deg,var(--surface-2),var(--surface-3));
+  border:1px solid var(--line-2);border-radius:var(--r-lg);padding:24px;
+  position:relative;overflow:hidden;min-height:340px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center}
+.demo-label{position:absolute;top:12px;left:14px;font-family:var(--mono);font-size:10px;
+  letter-spacing:.12em;color:var(--muted)}
+.demo-play{margin-top:16px}
+
+/* phone mockup */
+.phone{width:236px;background:#1c1c1a;border-radius:30px;padding:11px;box-shadow:var(--shadow-lg);
+  position:relative}
+.phone::before{content:'';position:absolute;top:18px;left:50%;transform:translateX(-50%);
+  width:54px;height:6px;background:#000;border-radius:var(--r-pill);z-index:3}
+.phone-screen{background:#EFEAE2;border-radius:21px;height:368px;overflow:hidden;
+  display:flex;flex-direction:column}
+.phone-hd{background:var(--surface);padding:24px 14px 9px;border-bottom:1px solid var(--line);
+  display:flex;align-items:center;gap:8px}
+.phone-hd .av{width:28px;height:28px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  flex:none}
+.phone-hd .nm{font-size:12px;font-weight:600}
+.phone-hd .st{font-size:10px;color:var(--success)}
+.phone-msgs{flex:1;padding:12px;display:flex;flex-direction:column;gap:8px;overflow:auto}
+.bubble{max-width:80%;font-size:12px;line-height:1.45;padding:8px 11px;border-radius:14px;
+  animation:popIn .35s cubic-bezier(.18,1.4,.4,1)}
+@keyframes popIn{from{opacity:0;transform:scale(.7) translateY(8px)}to{opacity:1;transform:scale(1)}}
+.bubble.them{background:var(--surface);color:var(--fg);align-self:flex-start;border-bottom-left-radius:4px;
+  box-shadow:var(--shadow-sm)}
+.bubble.me{background:var(--accent);color:#fff;align-self:flex-end;border-bottom-right-radius:4px}
+.bubble .meta{font-size:9px;opacity:.6;margin-top:3px}
+.typing{align-self:flex-start;background:var(--surface);padding:9px 12px;border-radius:14px;
+  border-bottom-left-radius:4px;display:flex;gap:3px;box-shadow:var(--shadow-sm)}
+.typing span{width:6px;height:6px;border-radius:50%;background:var(--muted-2);
+  animation:typedot 1.1s infinite}
+.typing span:nth-child(2){animation-delay:.15s}
+.typing span:nth-child(3){animation-delay:.3s}
+@keyframes typedot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-5px);opacity:1}}
+
+/* timeline */
+.timeline{display:flex;flex-direction:column;gap:0;width:100%;max-width:300px}
+.tl-step{display:flex;gap:12px;align-items:flex-start;padding-bottom:18px;position:relative}
+.tl-step:not(:last-child)::after{content:'';position:absolute;left:13px;top:26px;bottom:0;
+  width:2px;background:var(--line-2)}
+.tl-step.fired:not(:last-child)::after{background:var(--accent)}
+.tl-dot{width:28px;height:28px;border-radius:50%;background:var(--surface);border:2px solid var(--line-2);
+  display:flex;align-items:center;justify-content:center;font-size:12px;flex:none;z-index:2;transition:.3s}
+.tl-step.fired .tl-dot{background:var(--accent);border-color:var(--accent);color:#fff;
+  transform:scale(1.12)}
+.tl-step.fired .tl-dot::after{content:'✓'}
+.tl-body .tt{font-size:13px;font-weight:600}
+.tl-body .td{font-size:11.5px;color:var(--muted)}
+.tl-step.fired .tt{color:var(--accent-2)}
+
+/* churn radar */
+.client-list{width:100%;max-width:320px;display:flex;flex-direction:column;gap:9px}
+.cl-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:11px 13px;display:flex;align-items:center;gap:11px;transition:.5s;box-shadow:var(--shadow-sm)}
+.cl-av{width:32px;height:32px;border-radius:50%;flex:none;display:flex;align-items:center;
+  justify-content:center;font-size:12px;font-weight:700;color:#fff}
+.cl-info{flex:1;min-width:0}
+.cl-info .cn{font-size:13px;font-weight:600}
+.cl-info .cd{font-size:11px;color:var(--muted)}
+.cl-meter{width:54px;flex:none}
+.cl-meter .bar{height:6px;background:var(--surface-3);border-radius:var(--r-pill);overflow:hidden}
+.cl-meter .fill{height:100%;width:0;border-radius:var(--r-pill);transition:width 1s ease}
+.cl-meter .pct{font-size:9px;color:var(--muted);text-align:right;margin-top:2px;font-family:var(--mono)}
+.cl-card.flagged{border-color:var(--danger);box-shadow:0 0 0 1px var(--danger-soft)}
+.cl-card.saved{border-color:var(--success);box-shadow:0 0 0 1px rgba(79,138,91,.2)}
+.cl-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:var(--r-pill);
+  font-family:var(--mono);letter-spacing:.05em}
+.cl-tag.risk{background:var(--danger-soft);color:var(--danger)}
+.cl-tag.ok{background:var(--accent-3);color:var(--accent-2)}
+.cl-tag.saved{background:rgba(79,138,91,.16);color:var(--success)}
+
+/* protocol dots */
+.protocol-demo{text-align:center;width:100%;max-width:300px}
+.proto-dots{display:flex;gap:10px;justify-content:center;margin:18px 0}
+.proto-dot{width:34px;height:34px;border-radius:50%;background:var(--surface);
+  border:2px solid var(--line-2);display:flex;align-items:center;justify-content:center;
+  font-size:13px;font-weight:700;color:var(--muted);transition:.4s}
+.proto-dot.done{background:var(--accent);border-color:var(--accent);color:#fff}
+.proto-dot.next{border-color:var(--accent);color:var(--accent);
+  animation:nextPulse 1.6s infinite}
+@keyframes nextPulse{0%,100%{box-shadow:0 0 0 0 var(--accent-3)}50%{box-shadow:0 0 0 6px transparent}}
+.proto-status{font-size:13px;color:var(--fg-2);background:var(--surface);border:1px solid var(--line);
+  border-radius:var(--r-md);padding:11px;margin-top:10px}
+
+/* package liability counter */
+.liability{text-align:center}
+.liability .big-num{font-family:var(--serif);font-size:52px;font-weight:600;color:var(--danger);
+  transition:.4s;letter-spacing:-.02em}
+.liability.recovered .big-num{color:var(--success)}
+.liability .lc-label{font-size:12px;color:var(--muted);letter-spacing:.04em}
+.lc-bars{display:flex;gap:6px;justify-content:center;margin:20px 0;align-items:flex-end;height:90px}
+.lc-bar{width:30px;background:var(--surface-3);border-radius:6px 6px 0 0;transition:height .8s ease,background .4s;
+  position:relative}
+.lc-bar.active{background:var(--accent)}
+
+/* attribution funnel */
+.funnel{width:100%;max-width:300px}
+.fn-row{margin-bottom:11px}
+.fn-row .fn-top{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px}
+.fn-row .fn-top .fl{font-weight:600}
+.fn-row .fn-top .fv{font-family:var(--mono);color:var(--accent-2)}
+.fn-track{height:24px;background:var(--surface);border-radius:var(--r-sm);overflow:hidden;
+  border:1px solid var(--line)}
+.fn-fill{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  border-radius:var(--r-sm);transition:width 1.1s cubic-bezier(.22,1,.36,1)}
+
+/* analytics bars */
+.analytics{width:100%;max-width:320px}
+.an-bars{display:flex;gap:9px;align-items:flex-end;height:160px;padding-bottom:8px;
+  border-bottom:1px solid var(--line-2)}
+.an-bar{flex:1;background:linear-gradient(180deg,var(--accent),var(--accent-2));border-radius:6px 6px 0 0;
+  height:0;transition:height 1s cubic-bezier(.22,1,.36,1);position:relative}
+.an-bar::after{content:attr(data-v);position:absolute;top:-18px;left:0;right:0;text-align:center;
+  font-size:10px;font-family:var(--mono);color:var(--accent-2)}
+.an-labels{display:flex;gap:9px;margin-top:6px}
+.an-labels span{flex:1;text-align:center;font-size:10px;color:var(--muted)}
+.an-kpis{display:flex;gap:10px;margin-top:16px}
+.an-kpi{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:10px;text-align:center}
+.an-kpi .v{font-family:var(--serif);font-size:20px;font-weight:600;color:var(--accent-2)}
+.an-kpi .l{font-size:9.5px;color:var(--muted)}
+
+/* ── Process strip ──────────────────────────────────────────── */
+.process{display:grid;grid-template-columns:1fr;gap:16px}
+@media(min-width:680px){.process{grid-template-columns:repeat(4,1fr)}}
+.proc-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:18px;position:relative}
+.proc-card .pn{font-family:var(--serif);font-size:30px;color:var(--surface-3);font-weight:600;
+  position:absolute;top:8px;right:14px}
+.proc-card .pi{font-size:24px;margin-bottom:8px}
+.proc-card h4{font-size:14px;margin-bottom:5px}
+.proc-card p{font-size:12.5px;color:var(--muted);margin:0}
+
+/* ── FAQ ────────────────────────────────────────────────────── */
+.faq-item{border-bottom:1px solid var(--line);padding:4px 0}
+.faq-q{width:100%;background:none;border:none;font-family:var(--sans);font-size:15px;
+  font-weight:600;color:var(--fg);text-align:left;padding:16px 0;cursor:pointer;
+  display:flex;justify-content:space-between;gap:14px;align-items:center}
+.faq-q .pm{font-size:20px;color:var(--accent);transition:.25s;flex:none}
+.faq-q.open .pm{transform:rotate(45deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .35s ease;color:var(--fg-2);font-size:13.5px}
+.faq-a .inner{padding:0 0 16px}
+
+/* ── Footer ─────────────────────────────────────────────────── */
+footer{background:var(--fg);color:#cfc8b9;padding:40px 0;position:relative;z-index:1;margin-top:40px}
+footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:center}
+footer .brand-name{color:#fff}
+footer a{color:#cfc8b9}
+footer .fcols{display:flex;gap:30px;font-size:13px;flex-wrap:wrap}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);
+  background:var(--fg);color:#fff;padding:12px 20px;border-radius:var(--r-pill);font-size:13px;
+  font-weight:500;box-shadow:var(--shadow-lg);z-index:200;transition:transform .35s cubic-bezier(.22,1,.36,1);
+  display:flex;align-items:center;gap:8px}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* confetti */
+.confetti{position:fixed;width:9px;height:14px;z-index:300;top:-20px;pointer-events:none;border-radius:2px}
+
+/* scroll reveal */
+.reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
+.reveal.in{opacity:1;transform:none}
+
+/* ── Mobile (≤ 640px) ───────────────────────────────────────── */
+@media(max-width:640px){
+  body{font-size:14px}
+  h1{font-size:30px}
+  h2{font-size:24px}
+  .wrap{padding:0 16px}
+  .nav-inner{padding:10px 16px}
+  .brand-name{font-size:14px}
+  .hero{padding:44px 0 30px}
+  .hero p.lead{font-size:15px}
+  .hero-cta{flex-direction:column; align-items:stretch}
+  .hero-cta .btn{justify-content:center}
+  .hero-stats{gap:18px; margin-top:36px}
+  .hero-stat .n{font-size:26px}
+  .hero-stat .l{font-size:11px}
+
+  section.block{padding:32px 0; scroll-margin-top:64px}
+  .sec-head{margin-bottom:22px}
+
+  /* Wizard tightens up */
+  .wizard{border-radius:12px}
+  .wiz-top{padding:14px 16px; flex-wrap:wrap; gap:10px}
+  .wiz-body{padding:20px 16px; min-height:auto}
+  .wiz-foot{padding:14px 16px; flex-wrap:wrap; gap:10px; justify-content:space-between}
+  .wiz-foot .hint{display:none}
+  .wiz-dot{width:22px; height:5px}
+  .wiz-stepnum{font-size:11px}
+  .wiz-panel h3{font-size:22px}
+  .wiz-panel .sub{font-size:13px; margin-bottom:20px}
+  .grid2{gap:14px}
+  .field{margin-bottom:18px}
+
+  /* Options & chips — easier tap targets */
+  .opt{padding:12px 13px}
+  .opt .ttl{font-size:13.5px}
+  .opt .desc{font-size:11.5px}
+  .optgrid{gap:9px}
+  .chip{padding:10px 14px; font-size:13px}
+  .rank-item{padding:11px 12px}
+  .rank-item .rk-txt .t{font-size:13.5px}
+  .rank-item .rk-txt .d{font-size:11.5px}
+  .rank-item .rk-emoji{font-size:18px}
+
+  /* Walkthrough tabs — horizontal scroll instead of cramped wrapping */
+  .feature-tabs{flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    padding-bottom:8px; margin:0 -16px 22px; padding-left:16px; padding-right:16px;
+    scrollbar-width:thin}
+  .feature-tabs::-webkit-scrollbar{height:4px}
+  .feature-tabs::-webkit-scrollbar-thumb{background:var(--line-2); border-radius:2px}
+  .feature-tab{flex:none; padding:8px 14px; font-size:12.5px}
+  .feature-tab .tnum{font-size:9.5px}
+
+  .demo{padding:18px 14px; min-height:auto}
+  .feat-copy h3{font-size:22px}
+  .feat-copy p{font-size:14px}
+  .feat-copy .eg{font-size:13px; padding:10px 13px}
+  .feat-bullets li{font-size:13px}
+  .phone{width:200px}
+  .phone-screen{height:340px}
+
+  /* Tiny demos */
+  .timeline{max-width:100%}
+  .tl-body .tt{font-size:12.5px}
+  .tl-body .td{font-size:11px}
+  .liability .big-num{font-size:42px}
+  .lc-bars{height:70px}
+  .lc-bar{width:22px}
+  .proto-dot{width:30px;height:30px;font-size:12px}
+  .an-bars{height:130px}
+  .an-kpi .v{font-size:18px}
+  .an-kpi .l{font-size:9px}
+
+  /* Process strip & FAQ */
+  .process{gap:12px}
+  .proc-card{padding:16px}
+
+  /* Summary actions wrap nicely */
+  .actions-row{gap:8px}
+  .actions-row .btn{flex:1 1 auto; justify-content:center; padding:9px 12px; font-size:12.5px}
+  .actions-row #btnReset{margin-left:0 !important; flex-basis:100%}
+  .summary-box{padding:16px; font-size:12.5px}
+  .summary-box .row{flex-direction:column; gap:2px; padding:5px 0}
+  .summary-box .row .k{min-width:0; font-size:11px}
+
+  /* Footer */
+  footer .wrap{flex-direction:column; gap:14px; text-align:center}
+  footer .fcols{gap:14px}
+
+  /* Background blobs less intrusive */
+  .blob.b1{width:280px;height:280px;right:-100px}
+  .blob.b2{width:240px;height:240px;left:-100px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms !important;transition-duration:.01ms !important}
+  html{scroll-behavior:auto}
+}
+</style>
+</head>
+<body>
+<div class="blob b1"></div>
+<div class="blob b2"></div>
+
+<!-- ══ NAV ══════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="#top">
+      <span class="brand-mark"></span>
+      <span class="brand-name">AIKAB <span>· onboarding</span></span>
+    </a>
+    <div class="nav-links" id="navLinks">
+      <button data-go="intake">1 · Tell us about you</button>
+      <button data-go="walkthrough">2 · How it works</button>
+      <button data-go="process">3 · What happens next</button>
+      <button data-go="faq">FAQ</button>
+    </div>
+  </div>
+  <div class="nav-progress" id="navProgress"></div>
+</nav>
+
+<!-- ══ HERO ═════════════════════════════════════════════════ -->
+<header class="hero wrap" id="top">
+  <span class="eyebrow"><span class="dot"></span> Welcome to your AIKAB setup</span>
+  <h1>Let's get your spa<br/>running on <span class="em">autopilot</span>.</h1>
+  <p class="lead">This is a two-part experience. <b>First</b>, tell us about your med spa — your services,
+    your tools, what's bleeding revenue, and where you want to be. <b>Then</b>, we'll walk you through
+    exactly how AIKAB works, with live, interactive examples — so you'll <em>see</em> it before you ever sign in.</p>
+  <div class="hero-cta">
+    <button class="btn btn-primary" data-go="intake">Start — it takes ~5 minutes →</button>
+    <button class="btn btn-ghost" data-go="walkthrough">Skip ahead: show me how it works</button>
+  </div>
+  <div class="hero-stats">
+    <div class="hero-stat"><div class="n" data-count="180">$0</div><div class="l">K/yr lost to retention failure</div></div>
+    <div class="hero-stat"><div class="n" data-count="15">0</div><div class="l">pt retention lift in 90 days</div></div>
+    <div class="hero-stat"><div class="n" data-count="40">0</div><div class="l">% admin hours reclaimed</div></div>
+    <div class="hero-stat"><div class="n" data-count="0" data-suffix=" min">0</div><div class="l">migration downtime</div></div>
+  </div>
+</header>
+
+<div class="divider"></div>
+
+<!-- ══ PART 1 — INTAKE WIZARD ═══════════════════════════════ -->
+<section class="block" id="intake">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="mono">Part 1 — Your spa</span>
+      <h2>Tell us about <span class="em">your</span> world.</h2>
+      <p>Every answer shapes how we configure AIKAB for you — your treatment protocols, your follow-up timing,
+        your churn signals. Nothing here is busywork. Your progress saves automatically in this browser.</p>
+    </div>
+
+    <div class="wizard reveal" id="wizard">
+      <div class="wiz-top">
+        <div class="wiz-steps" id="wizDots"></div>
+        <div class="wiz-stepnum" id="wizStepNum">Step 1 / 8</div>
+      </div>
+
+      <div class="wiz-body">
+
+        <!-- STEP 1 — About the spa -->
+        <div class="wiz-panel active" data-step="0">
+          <h3>First — the basics about your spa</h3>
+          <p class="sub">So we know who we're building this for.</p>
+          <div class="grid2">
+            <div class="field">
+              <label for="f_spaname">Med spa name</label>
+              <input type="text" id="f_spaname" data-k="spa.name" placeholder="e.g. Radiance Med Spa" />
+            </div>
+            <div class="field">
+              <label for="f_city">City &amp; state</label>
+              <input type="text" id="f_city" data-k="spa.city" placeholder="e.g. Austin, TX" />
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label>How long have you been open?</label>
+              <select data-k="spa.age">
+                <option value="">Select…</option>
+                <option>Pre-launch / opening soon</option>
+                <option>Under 1 year</option>
+                <option>1–3 years</option>
+                <option>3–7 years</option>
+                <option>7+ years</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>How many locations do you run?</label>
+              <select data-k="spa.locations">
+                <option value="">Select…</option>
+                <option value="1">1 location</option>
+                <option value="2">2 locations</option>
+                <option value="3-5">3–5 locations</option>
+                <option value="6+">6+ locations</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Roughly, your annual revenue band</label>
+            <p class="help">This only helps us size your plan — it's never shared.</p>
+            <div class="optgrid" data-radio="spa.revenue">
+              <div class="opt" data-val="<$500K"><span class="ico">🌱</span><div><div class="ttl">Under $500K</div><div class="desc">Boutique / owner-operated</div></div></div>
+              <div class="opt" data-val="$500K–$1M"><span class="ico">🌿</span><div><div class="ttl">$500K – $1M</div><div class="desc">Growing single location</div></div></div>
+              <div class="opt" data-val="$1M–$3M"><span class="ico">🌳</span><div><div class="ttl">$1M – $3M</div><div class="desc">Established practice</div></div></div>
+              <div class="opt" data-val="$3M+"><span class="ico">🏔️</span><div><div class="ttl">$3M+</div><div class="desc">Multi-location / group</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 2 — Team -->
+        <div class="wiz-panel" data-step="1">
+          <h3>Who's on your team?</h3>
+          <p class="sub">AIKAB gives each role its own view — front desk sees the calendar, injectors see charts, you see the whole business.</p>
+          <div class="field">
+            <label>Total team size (everyone — front desk, providers, you)</label>
+            <div class="optgrid" data-radio="team.size">
+              <div class="opt" data-val="1-3"><span class="ico">👤</span><div><div class="ttl">Just 1–3 of us</div><div class="desc">Owner wears every hat</div></div></div>
+              <div class="opt" data-val="4-10"><span class="ico">👥</span><div><div class="ttl">4–10 people</div><div class="desc">Small dedicated team</div></div></div>
+              <div class="opt" data-val="11-25"><span class="ico">👨‍👩‍👧</span><div><div class="ttl">11–25 people</div><div class="desc">Multiple shifts / roles</div></div></div>
+              <div class="opt" data-val="25+"><span class="ico">🏢</span><div><div class="ttl">25+ people</div><div class="desc">Multi-location staffing</div></div></div>
+            </div>
+          </div>
+          <div class="field">
+            <label>Which roles will use AIKAB? <span style="color:var(--muted);font-weight:400">(pick all that apply)</span></label>
+            <div class="chips" data-multi="team.roles">
+              <span class="chip" data-val="Owner / Operator">Owner / Operator</span>
+              <span class="chip" data-val="Front desk / Reception">Front desk / Reception</span>
+              <span class="chip" data-val="Injector / Nurse">Injector / Nurse</span>
+              <span class="chip" data-val="Esthetician">Esthetician</span>
+              <span class="chip" data-val="Marketing manager">Marketing manager</span>
+              <span class="chip" data-val="Medical director">Medical director</span>
+              <span class="chip" data-val="Office / practice manager">Office / practice manager</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 3 — Services -->
+        <div class="wiz-panel" data-step="2">
+          <h3>What treatments do you offer?</h3>
+          <p class="sub">We'll pre-load follow-up protocols for each one — Botox checks in at day 14, microneedling at day 3, laser packages track session-by-session.</p>
+          <div class="field">
+            <label>Treatments &amp; services <span style="color:var(--muted);font-weight:400">(pick all that apply)</span></label>
+            <div class="chips" data-multi="services.list">
+              <span class="chip" data-val="Botox / neurotoxins">Botox / neurotoxins</span>
+              <span class="chip" data-val="Dermal fillers">Dermal fillers</span>
+              <span class="chip" data-val="Laser hair removal">Laser hair removal</span>
+              <span class="chip" data-val="Laser skin resurfacing">Laser skin resurfacing</span>
+              <span class="chip" data-val="Microneedling">Microneedling</span>
+              <span class="chip" data-val="CoolSculpting / body contouring">CoolSculpting / body contouring</span>
+              <span class="chip" data-val="Chemical peels">Chemical peels</span>
+              <span class="chip" data-val="HydraFacial / facials">HydraFacial / facials</span>
+              <span class="chip" data-val="IV therapy / wellness">IV therapy / wellness</span>
+              <span class="chip" data-val="Hormone / weight management">Hormone / weight management</span>
+              <span class="chip" data-val="PRP / hair restoration">PRP / hair restoration</span>
+              <span class="chip" data-val="Medical-grade skincare retail">Medical-grade skincare retail</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Do you sell packages or memberships?</label>
+            <div class="optgrid" data-radio="services.packages">
+              <div class="opt" data-val="Both"><span class="ico">🎁</span><div><div class="ttl">Both packages &amp; memberships</div><div class="desc">Pre-paid bundles + recurring plans</div></div></div>
+              <div class="opt" data-val="Packages only"><span class="ico">📦</span><div><div class="ttl">Packages only</div><div class="desc">Pre-paid session bundles</div></div></div>
+              <div class="opt" data-val="Memberships only"><span class="ico">💳</span><div><div class="ttl">Memberships only</div><div class="desc">Monthly recurring plans</div></div></div>
+              <div class="opt" data-val="Neither yet"><span class="ico">✨</span><div><div class="ttl">Neither yet</div><div class="desc">We'd like to start</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- STEP 4 — Current stack -->
+        <div class="wiz-panel" data-step="3">
+          <h3>What are you using today?</h3>
+          <p class="sub">AIKAB sits on top of your current stack and syncs with it — no rip-and-replace. Phase one, we just make what you have smarter.</p>
+          <div class="grid2">
+            <div class="field">
+              <label>Booking / scheduling system</label>
+              <select data-k="stack.booking">
+                <option value="">Select…</option>
+                <option>Boulevard</option><option>Zenoti</option><option>Mindbody</option>
+                <option>Vagaro</option><option>Square Appointments</option><option>Aesthetic Record</option>
+                <option>Pen &amp; paper / spreadsheet</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>EMR / charting</label>
+              <select data-k="stack.emr">
+                <option value="">Select…</option>
+                <option>Aesthetic Record</option><option>Symplast</option><option>Nextech</option>
+                <option>PatientNow</option><option>Built into booking system</option>
+                <option>Paper charts</option><option>None / Other</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label>How do you do marketing today?</label>
+              <select data-k="stack.marketing">
+                <option value="">Select…</option>
+                <option>Agency runs our ads</option>
+                <option>We run Meta/Google ads ourselves</option>
+                <option>Mostly email / newsletters</option>
+                <option>Mostly social / organic</option>
+                <option>Word of mouth — no real marketing</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>How do you message clients now?</label>
+              <select data-k="stack.messaging">
+                <option value="">Select…</option>
+                <option>Manually, staff texts/calls</option>
+                <option>Booking system's built-in reminders</option>
+                <option>A separate email tool (Mailchimp etc.)</option>
+                <option>A mix of everything</option>
+                <option>We mostly don't follow up</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>What frustrates you most about your current setup?</label>
+            <textarea data-k="stack.frustration" placeholder="e.g. Nothing talks to each other — I copy client info between four tabs all day."></textarea>
+          </div>
+        </div>
+
+        <!-- STEP 5 — Pain points -->
+        <div class="wiz-panel" data-step="4">
+          <h3>Where is revenue leaking?</h3>
+          <p class="sub">Tap every problem you feel. The ones you pick become the dashboards and automations we light up first.</p>
+          <div class="rank" data-multi="pains.list">
+            <div class="rank-item" data-val="Client retention — they don't come back"><span class="rank-badge"></span><span class="rk-emoji">🔄</span><div class="rk-txt"><div class="t">Clients don't come back</div><div class="d">60–70% never return after the first visit</div></div></div>
+            <div class="rank-item" data-val="No-shows & last-minute cancellations"><span class="rank-badge"></span><span class="rk-emoji">📵</span><div class="rk-txt"><div class="t">No-shows &amp; cancellations</div><div class="d">Empty chairs costing $40–70K/year</div></div></div>
+            <div class="rank-item" data-val="Unused packages & silent membership churn"><span class="rank-badge"></span><span class="rk-emoji">📦</span><div class="rk-txt"><div class="t">Unused packages &amp; membership churn</div><div class="d">Pre-paid sessions that never get redeemed</div></div></div>
+            <div class="rank-item" data-val="Marketing spend with no clear ROI"><span class="rank-badge"></span><span class="rk-emoji">💸</span><div class="rk-txt"><div class="t">Marketing spend with no clear ROI</div><div class="d">Can't tell which channel actually pays</div></div></div>
+            <div class="rank-item" data-val="Protocol drop-off (sessions 3–6 never booked)"><span class="rank-badge"></span><span class="rk-emoji">📉</span><div class="rk-txt"><div class="t">Protocol drop-off</div><div class="d">Clients quit a 6-session plan after 2</div></div></div>
+            <div class="rank-item" data-val="Too much manual admin & disconnected tools"><span class="rank-badge"></span><span class="rk-emoji">🗂️</span><div class="rk-txt"><div class="t">Manual admin &amp; disconnected tools</div><div class="d">Staff juggling 5+ systems all day</div></div></div>
+            <div class="rank-item" data-val="Inventory waste — expired injectables"><span class="rank-badge"></span><span class="rk-emoji">💉</span><div class="rk-txt"><div class="t">Inventory waste</div><div class="d">Botox &amp; filler expiring or running out</div></div></div>
+            <div class="rank-item" data-val="Leads slipping through the cracks"><span class="rank-badge"></span><span class="rk-emoji">🕳️</span><div class="rk-txt"><div class="t">Leads slipping through the cracks</div><div class="d">Inquiries that never get a reply</div></div></div>
+          </div>
+        </div>
+
+        <!-- STEP 6 — Goals & expectations -->
+        <div class="wiz-panel" data-step="5">
+          <h3>What does "this worked" look like?</h3>
+          <p class="sub">Set your targets. We'll hold ourselves to them — and show them back to you on your dashboard.</p>
+          <div class="slider-row">
+            <div class="sl-top"><span class="sl-label">📈 Retention lift I want to see</span><span class="sl-val" id="slv_ret">+15 pts</span></div>
+            <input type="range" min="5" max="30" value="15" data-slider="goals.retention" data-fmt="+{v} pts" data-out="slv_ret">
+            <div class="sl-scale"><span>modest</span><span>aggressive</span></div>
+          </div>
+          <div class="slider-row">
+            <div class="sl-top"><span class="sl-label">📵 No-show rate reduction</span><span class="sl-val" id="slv_ns">40%</span></div>
+            <input type="range" min="10" max="70" value="40" data-slider="goals.noshow" data-fmt="{v}%" data-out="slv_ns">
+            <div class="sl-scale"><span>10%</span><span>70%</span></div>
+          </div>
+          <div class="slider-row">
+            <div class="sl-top"><span class="sl-label">⏱️ Admin hours I want back each week</span><span class="sl-val" id="slv_hrs">10 hrs</span></div>
+            <input type="range" min="2" max="30" value="10" data-slider="goals.hours" data-fmt="{v} hrs" data-out="slv_hrs">
+            <div class="sl-scale"><span>2 hrs</span><span>30 hrs</span></div>
+          </div>
+          <div class="field" style="margin-top:24px">
+            <label>How soon do you need to see results?</label>
+            <div class="chips" data-radio-chip="goals.timeline">
+              <span class="chip" data-val="ASAP — within 30 days">ASAP — within 30 days</span>
+              <span class="chip" data-val="Within a quarter">Within a quarter</span>
+              <span class="chip" data-val="We're building for the long term">Long-term build</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Anything else you're hoping AIKAB solves for you?</label>
+            <textarea data-k="goals.notes" placeholder="In your own words — the dream outcome."></textarea>
+          </div>
+        </div>
+
+        <!-- STEP 7 — Scale -->
+        <div class="wiz-panel" data-step="6">
+          <h3>Scale</h3>
+          <p class="sub">A couple of numbers so we size your workspace, sequence volume, and sync correctly.</p>
+          <div class="grid2">
+            <div class="field">
+              <label>Active client contacts in your database</label>
+              <select data-k="volume.contacts">
+                <option value="">Select…</option>
+                <option>Under 500</option><option>500 – 2,000</option>
+                <option>2,000 – 10,000</option><option>10,000+</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Appointments per month (roughly)</label>
+              <select data-k="volume.appts">
+                <option value="">Select…</option>
+                <option>Under 100</option><option>100 – 400</option>
+                <option>400 – 1,000</option><option>1,000+</option>
+              </select>
+            </div>
+          </div>
+          <div class="field">
+            <label>Monthly message volume you'd expect (SMS + email combined)</label>
+            <select data-k="volume.messaging">
+              <option value="">Select…</option>
+              <option>Light — under 2,000 messages/mo</option>
+              <option>Moderate — 2,000–10,000 messages/mo</option>
+              <option>Heavy — 10,000+ messages/mo</option>
+              <option>Not sure yet</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Are you HIPAA-handling clinical data we should know about?</label>
+            <div class="chips" data-radio-chip="volume.compliance">
+              <span class="chip" data-val="Yes — clinical records & photos">Yes — clinical records &amp; photos</span>
+              <span class="chip" data-val="Some — basic intake forms">Some — basic intake forms</span>
+              <span class="chip" data-val="Not really — mostly aesthetic">Not really — mostly aesthetic</span>
+            </div>
+          </div>
+          <div class="reco-banner">
+            <span style="font-size:18px">✨</span>
+            <div>That's everything we need on scale. Our team reviews your answers and configures the right workspace before your kickoff call — no commitment needed here.</div>
+          </div>
+        </div>
+
+        <!-- STEP 8 — Contact + review -->
+        <div class="wiz-panel" data-step="7">
+          <h3>Last step — how do we reach you?</h3>
+          <p class="sub">Then build your summary. We'll use it to pre-configure your workspace before your kickoff call.</p>
+          <div class="grid2">
+            <div class="field">
+              <label for="f_name">Your name</label>
+              <input type="text" id="f_name" data-k="contact.name" placeholder="Jordan Avery" />
+            </div>
+            <div class="field">
+              <label for="f_role">Your role</label>
+              <input type="text" id="f_role" data-k="contact.role" placeholder="Owner" />
+            </div>
+          </div>
+          <div class="grid2">
+            <div class="field">
+              <label for="f_email">Email</label>
+              <input type="email" id="f_email" data-k="contact.email" placeholder="you@yourspa.com" />
+            </div>
+            <div class="field">
+              <label for="f_phone">Mobile</label>
+              <input type="tel" id="f_phone" data-k="contact.phone" placeholder="(555) 123-4567" />
+            </div>
+          </div>
+          <div class="field">
+            <label>Best time for a 30-minute kickoff call</label>
+            <div class="chips" data-radio-chip="contact.besttime">
+              <span class="chip" data-val="Weekday mornings">Weekday mornings</span>
+              <span class="chip" data-val="Weekday afternoons">Weekday afternoons</span>
+              <span class="chip" data-val="Evenings">Evenings</span>
+              <span class="chip" data-val="Weekends">Weekends</span>
+            </div>
+          </div>
+
+          <div class="success-banner" id="successBanner">
+            <span class="big">🎉</span>
+            <div><b>Your onboarding profile is ready.</b><br/>
+              <span style="font-size:13px;opacity:.9">Download it, copy it, or email it to our team — then scroll down and we'll show you exactly what we'll build for you.</span></div>
+          </div>
+
+          <div class="field" style="margin-top:8px">
+            <label>Your onboarding summary</label>
+            <p class="help">Generated from everything you entered — review it before you send.</p>
+            <div class="summary-box" id="summaryBox">Click <b>“Build my summary”</b> below to generate it.</div>
+          </div>
+
+          <div class="actions-row">
+            <button class="btn btn-primary btn-sm" id="btnSubmit">📨 Send to AIKAB team</button>
+            <button class="btn btn-ghost btn-sm" id="btnBuild">Build summary</button>
+            <button class="btn btn-ghost btn-sm" id="btnCopy">Copy</button>
+            <button class="btn btn-ghost btn-sm" id="btnTxt">Download .txt</button>
+            <button class="btn btn-ghost btn-sm" id="btnJson">Download .json</button>
+            <button class="btn btn-ghost btn-sm" id="btnEmail">Email it</button>
+            <button class="btn btn-ghost btn-sm" id="btnReset" style="margin-left:auto;color:var(--danger)">Clear &amp; restart</button>
+          </div>
+        </div>
+
+      </div><!-- /wiz-body -->
+
+      <div class="wiz-foot">
+        <button class="btn btn-ghost btn-sm" id="wizPrev" disabled>← Back</button>
+        <span class="hint" id="wizHint">Your answers save automatically.</span>
+        <button class="btn btn-primary btn-sm" id="wizNext">Next →</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══ PART 2 — INTERACTIVE WALKTHROUGH ═════════════════════ -->
+<section class="block" id="walkthrough">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="mono">Part 2 — How AIKAB works</span>
+      <h2>Now let us <span class="em">show</span> you — not just tell you.</h2>
+      <p>Pick any capability below and run the live demo. This is the actual logic AIKAB runs for you,
+        every day, in the background — no clicking, no remembering, no staff member who "forgot."</p>
+    </div>
+
+    <div class="feature-tabs reveal" id="featureTabs">
+      <button class="feature-tab active" data-feat="0"><span class="tnum">01</span> Smart Follow-Up</button>
+      <button class="feature-tab" data-feat="1"><span class="tnum">02</span> No-Show Recovery</button>
+      <button class="feature-tab" data-feat="2"><span class="tnum">03</span> Churn Radar</button>
+      <button class="feature-tab" data-feat="3"><span class="tnum">04</span> Protocol Tracking</button>
+      <button class="feature-tab" data-feat="4"><span class="tnum">05</span> Package Recovery</button>
+      <button class="feature-tab" data-feat="5"><span class="tnum">06</span> Marketing Attribution</button>
+      <button class="feature-tab" data-feat="6"><span class="tnum">07</span> Your Dashboard</button>
+    </div>
+
+    <!-- FEATURE 0 — Smart Follow-Up -->
+    <div class="feature-stage active" data-feat="0">
+      <div class="feat-copy">
+        <span class="tag">The flagship · automation</span>
+        <h3>Every appointment becomes a follow-up — automatically.</h3>
+        <p>The moment a visit is marked <b>complete</b>, AIKAB picks the right treatment-specific sequence,
+          writes each message in your brand voice, and schedules it for the perfect moment — in the
+          <em>client's</em> timezone.</p>
+        <div class="eg">
+          <b>Example:</b> A Botox client leaves today. AIKAB doesn't text "thanks for visiting." It waits
+          <b>14 days</b> — when results are actually visible — then sends a check-in that references the
+          treatment, the provider, and a one-tap rebook link.
+        </div>
+        <ul class="feat-bullets">
+          <li>Treatment-aware timing (Botox → day 14, microneedling → day 3)</li>
+          <li>Quiet hours respected — nothing sends at 9 PM</li>
+          <li>Frequency-capped — never more than 3 messages in 24h</li>
+          <li>You can preview &amp; edit any message before it goes out</li>
+        </ul>
+      </div>
+      <div class="demo" data-demo="followup">
+        <span class="demo-label">LIVE DEMO · post-treatment sequence</span>
+        <div style="display:flex;gap:22px;flex-wrap:wrap;justify-content:center;align-items:center">
+          <div class="timeline" id="fuTimeline">
+            <div class="tl-step" data-day="0"><div class="tl-dot">📍</div><div class="tl-body"><div class="tt">Appointment completed</div><div class="td">Botox · 20 units · today</div></div></div>
+            <div class="tl-step" data-day="1"><div class="tl-dot">💬</div><div class="tl-body"><div class="tt">Day 2 — settle-in check</div><div class="td">"How are you feeling?"</div></div></div>
+            <div class="tl-step" data-day="14"><div class="tl-dot">✨</div><div class="tl-body"><div class="tt">Day 14 — results check-in</div><div class="td">References treatment + rebook link</div></div></div>
+            <div class="tl-step" data-day="75"><div class="tl-dot">🔁</div><div class="tl-body"><div class="tt">Day 75 — rebook nudge</div><div class="td">"Time to keep your results"</div></div></div>
+          </div>
+          <div class="phone">
+            <div class="phone-screen">
+              <div class="phone-hd"><div class="av"></div><div><div class="nm">Radiance Med Spa</div><div class="st">● delivers via SMS</div></div></div>
+              <div class="phone-msgs" id="fuMsgs"></div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm demo-play" data-run="followup">▶ Run the sequence</button>
+      </div>
+    </div>
+
+    <!-- FEATURE 1 — No-Show Recovery -->
+    <div class="feature-stage" data-feat="1">
+      <div class="feat-copy">
+        <span class="tag">Stops the bleed</span>
+        <h3>A no-show gets contacted within the hour — every time.</h3>
+        <p>When an appointment is flagged <b>no-show</b>, AIKAB doesn't wait for a staff member to remember.
+          A warm, non-shaming message goes out within <b>60 minutes</b> with a one-tap rebook link.</p>
+        <div class="eg">
+          <b>Why it works:</b> ~40% of no-shows are recoverable with same-day outreach. Wait until tomorrow
+          and most become permanent churn. AIKAB never waits.
+        </div>
+        <ul class="feat-bullets">
+          <li>First touch within 60 min — empathetic, never shaming</li>
+          <li>Optional make-good incentive you control (e.g. SORRY10)</li>
+          <li>Escalates at 48h and day 7, then hands off to Churn Radar</li>
+          <li>Repeat no-shows auto-tagged "deposit required"</li>
+        </ul>
+      </div>
+      <div class="demo" data-demo="noshow">
+        <span class="demo-label">LIVE DEMO · no-show recovery</span>
+        <div class="phone">
+          <div class="phone-screen">
+            <div class="phone-hd"><div class="av"></div><div><div class="nm">Radiance Med Spa</div><div class="st" id="nsStatus">● waiting…</div></div></div>
+            <div class="phone-msgs" id="nsMsgs">
+              <div style="margin:auto;text-align:center;color:var(--muted);font-size:12px;padding:20px">
+                Maya was a no-show for her 2 PM HydraFacial.<br/>Watch what AIKAB does next.
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm demo-play" data-run="noshow">▶ Mark Maya a no-show</button>
+      </div>
+    </div>
+
+    <!-- FEATURE 2 — Churn Radar -->
+    <div class="feature-stage" data-feat="2">
+      <div class="feat-copy">
+        <span class="tag">Sees it coming</span>
+        <h3>AIKAB knows who's about to ghost you — before they do.</h3>
+        <p>Every client gets a live churn-risk score from their visit gaps, spend trend, engagement, and
+          protocol status. When someone crosses into the danger zone, AIKAB flags them <em>and</em> launches
+          a win-back before they're gone for good.</p>
+        <div class="eg">
+          <b>Example:</b> Sarah used to come every 6 weeks. It's been 11. Her score climbs to 84%. AIKAB
+          flags her and sends a personal "we miss you" with her favorite treatment pre-loaded.
+        </div>
+        <ul class="feat-bullets">
+          <li>Risk score updates nightly — no spreadsheet, ever</li>
+          <li>At-risk clients surface to a "Save list" on your dashboard</li>
+          <li>Win-back sequences fire automatically at threshold</li>
+          <li>You see exactly which saves were AIKAB's doing</li>
+        </ul>
+      </div>
+      <div class="demo" data-demo="churn">
+        <span class="demo-label">LIVE DEMO · nightly churn scan</span>
+        <div class="client-list" id="churnList">
+          <div class="cl-card" data-risk="22" data-name="Priya R." data-note="Visited 3 weeks ago · on track">
+            <div class="cl-av" style="background:#6B8E7E">PR</div>
+            <div class="cl-info"><div class="cn">Priya R.</div><div class="cd">Last visit: 3 weeks ago</div></div>
+            <div class="cl-meter"><div class="bar"><div class="fill"></div></div><div class="pct">—</div></div>
+          </div>
+          <div class="cl-card" data-risk="84" data-name="Sarah M." data-note="11 weeks since last visit · spend down">
+            <div class="cl-av" style="background:#B0473F">SM</div>
+            <div class="cl-info"><div class="cn">Sarah M.</div><div class="cd">Last visit: 11 weeks ago</div></div>
+            <div class="cl-meter"><div class="bar"><div class="fill"></div></div><div class="pct">—</div></div>
+          </div>
+          <div class="cl-card" data-risk="38" data-name="Dana K." data-note="Mid-protocol · session 3 of 6">
+            <div class="cl-av" style="background:#6B8E7E">DK</div>
+            <div class="cl-info"><div class="cn">Dana K.</div><div class="cd">Mid-protocol · 3 of 6</div></div>
+            <div class="cl-meter"><div class="bar"><div class="fill"></div></div><div class="pct">—</div></div>
+          </div>
+          <div class="cl-card" data-risk="71" data-name="Alex T." data-note="No-show last visit · disengaged">
+            <div class="cl-av" style="background:#B58A3E">AT</div>
+            <div class="cl-info"><div class="cn">Alex T.</div><div class="cd">No-show last visit</div></div>
+            <div class="cl-meter"><div class="bar"><div class="fill"></div></div><div class="pct">—</div></div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm demo-play" data-run="churn">▶ Run nightly churn scan</button>
+      </div>
+    </div>
+
+    <!-- FEATURE 3 — Protocol Tracking -->
+    <div class="feature-stage" data-feat="3">
+      <div class="feat-copy">
+        <span class="tag">Protects your big revenue</span>
+        <h3>Multi-session protocols, tracked to the finish.</h3>
+        <p>Laser hair removal is 6 sessions. Most clients quit after 2 — the single biggest source of
+          revenue leakage in a spa. AIKAB knows exactly which session each client is on and nudges them
+          to book the next one at the <em>clinically optimal</em> interval.</p>
+        <div class="eg">
+          <b>Example:</b> Dana finished session 3 of 6 today. AIKAB recalculates her ideal next date from
+          <em>today</em> — not the original plan — and will nudge her 7 days before it's due.
+        </div>
+        <ul class="feat-bullets">
+          <li>Knows total sessions, optimal interval &amp; tolerance per treatment</li>
+          <li>Re-times the whole plan if a client slips</li>
+          <li>Providers see "Session 3 of 6" right on the chart</li>
+          <li>Booked-in-protocol clients are 4× more likely to finish</li>
+        </ul>
+      </div>
+      <div class="demo" data-demo="protocol">
+        <span class="demo-label">LIVE DEMO · laser hair removal · 6 sessions</span>
+        <div class="protocol-demo">
+          <div style="font-weight:600;font-size:14px">Dana K. — Laser Hair Removal</div>
+          <div class="proto-dots" id="protoDots">
+            <div class="proto-dot done">1</div>
+            <div class="proto-dot done">2</div>
+            <div class="proto-dot next">3</div>
+            <div class="proto-dot">4</div>
+            <div class="proto-dot">5</div>
+            <div class="proto-dot">6</div>
+          </div>
+          <div class="proto-status" id="protoStatus">Session 3 of 6 is due. Tap below to complete it and watch AIKAB re-plan.</div>
+        </div>
+        <button class="btn btn-primary btn-sm demo-play" data-run="protocol">▶ Complete this session</button>
+      </div>
+    </div>
+
+    <!-- FEATURE 4 — Package Recovery -->
+    <div class="feature-stage" data-feat="4">
+      <div class="feat-copy">
+        <span class="tag">Finds buried cash</span>
+        <h3>Every unredeemed package is money you already earned.</h3>
+        <p>Spas average <b>25–40%</b> of package sessions never used. That's paid revenue with no clinical
+          relationship and a future refund risk. AIKAB surfaces the total dollar liability and runs
+          graduated nudges to drive redemption.</p>
+        <div class="eg">
+          <b>Example:</b> A client bought 6 microneedling sessions, used 2. At day 30 AIKAB sends a gentle
+          reminder, day 60 an easy booking link, day 90 an expiry-urgency nudge — each one-tap to rebook.
+        </div>
+        <ul class="feat-bullets">
+          <li>Live "unused package liability" figure on your dashboard</li>
+          <li>Nightly scan finds every dormant package automatically</li>
+          <li>Expiration countdowns at 30 / 15 / 7 / 1 days</li>
+          <li>Membership dunning &amp; reactivation handled end-to-end</li>
+        </ul>
+      </div>
+      <div class="demo" data-demo="package">
+        <span class="demo-label">LIVE DEMO · dormant package recovery</span>
+        <div class="liability" id="liability">
+          <div class="lc-label">UNUSED PACKAGE LIABILITY</div>
+          <div class="big-num" id="liabNum">$24,800</div>
+          <div class="lc-bars" id="liabBars">
+            <div class="lc-bar" style="height:80px"></div>
+            <div class="lc-bar" style="height:65px"></div>
+            <div class="lc-bar" style="height:72px"></div>
+            <div class="lc-bar" style="height:50px"></div>
+            <div class="lc-bar" style="height:60px"></div>
+            <div class="lc-bar" style="height:40px"></div>
+          </div>
+          <div class="proto-status" id="liabStatus">31 dormant packages detected. Tap to send graduated rebook nudges.</div>
+        </div>
+        <button class="btn btn-primary btn-sm demo-play" data-run="package">▶ Send rebook nudges</button>
+      </div>
+    </div>
+
+    <!-- FEATURE 5 — Marketing Attribution -->
+    <div class="feature-stage" data-feat="5">
+      <div class="feat-copy">
+        <span class="tag">Growth intelligence</span>
+        <h3>Finally know which marketing dollar actually pays.</h3>
+        <p>AIKAB closes the loop from ad click → inquiry → booking → completed visit → lifetime value. No
+          more guessing. You see the real cost per booked client, per channel, and AIKAB shifts budget
+          toward what works.</p>
+        <div class="eg">
+          <b>Example:</b> Meta looks cheap on cost-per-click — but Google clients book 2× more and spend
+          3× more over a year. AIKAB shows you the truth and nurtures every lead automatically until they
+          book.
+        </div>
+        <ul class="feat-bullets">
+          <li>True closed-loop attribution by channel</li>
+          <li>Automated lead nurture — no inquiry goes cold</li>
+          <li>LTV by cohort &amp; predictive revenue forecasting</li>
+          <li>Referral engine that runs itself</li>
+        </ul>
+      </div>
+      <div class="demo" data-demo="attribution">
+        <span class="demo-label">LIVE DEMO · closed-loop funnel · last 30 days</span>
+        <div class="funnel" id="funnel">
+          <div class="fn-row"><div class="fn-top"><span class="fl">Ad clicks</span><span class="fv" data-v="4,200">0</span></div><div class="fn-track"><div class="fn-fill" data-w="100"></div></div></div>
+          <div class="fn-row"><div class="fn-top"><span class="fl">Inquiries</span><span class="fv" data-v="610">0</span></div><div class="fn-track"><div class="fn-fill" data-w="62"></div></div></div>
+          <div class="fn-row"><div class="fn-top"><span class="fl">Nurtured by AIKAB</span><span class="fv" data-v="610">0</span></div><div class="fn-track"><div class="fn-fill" data-w="58"></div></div></div>
+          <div class="fn-row"><div class="fn-top"><span class="fl">Booked appointments</span><span class="fv" data-v="248">0</span></div><div class="fn-track"><div class="fn-fill" data-w="40"></div></div></div>
+          <div class="fn-row"><div class="fn-top"><span class="fl">Completed &amp; attributed</span><span class="fv" data-v="221">0</span></div><div class="fn-track"><div class="fn-fill" data-w="34"></div></div></div>
+        </div>
+        <button class="btn btn-primary btn-sm demo-play" data-run="attribution">▶ Trace the funnel</button>
+      </div>
+    </div>
+
+    <!-- FEATURE 6 — Dashboard -->
+    <div class="feature-stage" data-feat="6">
+      <div class="feat-copy">
+        <span class="tag">Your command center</span>
+        <h3>One screen. The whole business. Updated live.</h3>
+        <p>No more logging into five systems. Your AIKAB dashboard shows retention, revenue at risk,
+          today's confirmations, and what every automation did for you — in plain numbers, the moment
+          you log in.</p>
+        <div class="eg">
+          <b>The promise on your dashboard:</b> +15 pts retention in 90 days, no-shows cut, package
+          utilization up — and a running tally of revenue AIKAB recovered that would otherwise be gone.
+        </div>
+        <ul class="feat-bullets">
+          <li>Role-based — front desk, providers &amp; you each see what matters</li>
+          <li>Every automation is measured &amp; attributed back to dollars</li>
+          <li>Real-time — no overnight reports, no exports</li>
+          <li>p95 under 250ms, loads in under 2 seconds</li>
+        </ul>
+      </div>
+      <div class="demo" data-demo="analytics">
+        <span class="demo-label">LIVE DEMO · retention by month</span>
+        <div class="analytics">
+          <div class="an-bars" id="anBars">
+            <div class="an-bar" data-h="48" data-v="58%"></div>
+            <div class="an-bar" data-h="56" data-v="62%"></div>
+            <div class="an-bar" data-h="68" data-v="67%"></div>
+            <div class="an-bar" data-h="82" data-v="71%"></div>
+            <div class="an-bar" data-h="92" data-v="74%"></div>
+            <div class="an-bar" data-h="100" data-v="76%"></div>
+          </div>
+          <div class="an-labels"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span></div>
+          <div class="an-kpis">
+            <div class="an-kpi"><div class="v" id="kpi1">+0</div><div class="l">retention pts</div></div>
+            <div class="an-kpi"><div class="v" id="kpi2">$0</div><div class="l">recovered / mo</div></div>
+            <div class="an-kpi"><div class="v" id="kpi3">0</div><div class="l">automations run</div></div>
+          </div>
+        </div>
+        <button class="btn btn-primary btn-sm demo-play" data-run="analytics">▶ Load my numbers</button>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══ PART 3 — PROCESS ═════════════════════════════════════ -->
+<section class="block" id="process">
+  <div class="wrap">
+    <div class="sec-head reveal">
+      <span class="mono">Part 3 — What happens next</span>
+      <h2>From this form to your first <span class="em">AI message</span>.</h2>
+      <p>No long IT project. No downtime. Here's the path once you hit submit above.</p>
+    </div>
+    <div class="process reveal">
+      <div class="proc-card"><span class="pn">1</span><div class="pi">📋</div><h4>You submit this</h4><p>We pre-configure your workspace from your answers — services, protocols, brand voice.</p></div>
+      <div class="proc-card"><span class="pn">2</span><div class="pi">🤝</div><h4>30-min kickoff call</h4><p>We connect your booking system, confirm brand voice, and review your goals.</p></div>
+      <div class="proc-card"><span class="pn">3</span><div class="pi">🔌</div><h4>Sync &amp; go live</h4><p>Your client history flows in. Automations switch on in review mode — you approve the first of each.</p></div>
+      <div class="proc-card"><span class="pn">4</span><div class="pi">📈</div><h4>Measurable in 30 days</h4><p>Retention lift shows on your dashboard, or we work for free until it does.</p></div>
+    </div>
+  </div>
+</section>
+
+<div class="divider"></div>
+
+<!-- ══ FAQ ══════════════════════════════════════════════════ -->
+<section class="block" id="faq">
+  <div class="wrap" style="max-width:760px">
+    <div class="sec-head reveal center" style="margin-bottom:20px">
+      <span class="mono">Common questions</span>
+      <h2>Before you hand us your spa.</h2>
+    </div>
+    <div class="reveal" id="faqList">
+      <div class="faq-item"><button class="faq-q">Do I have to replace my booking system? <span class="pm">+</span></button><div class="faq-a"><div class="inner">No. AIKAB sits on top of what you already use — Boulevard, Zenoti, Mindbody and more — and syncs both ways. Phase one, we make your current stack smarter. Nothing gets ripped out.</div></div></div>
+      <div class="faq-item"><button class="faq-q">Is my client data safe and HIPAA-handled? <span class="pm">+</span></button><div class="faq-a"><div class="inner">Yes. Every tenant's data is fully isolated at the database level — zero cross-tenant leakage is a hard rule. Clinical content is locked behind review-and-approve until you're comfortable. Compliance tooling is built in.</div></div></div>
+      <div class="faq-item"><button class="faq-q">What if the AI sends something off-brand? <span class="pm">+</span></button><div class="faq-a"><div class="inner">You configure your brand voice once, and you can preview &amp; edit any message before it sends. The first message of every new sequence is review-and-approve — after you approve it, it runs on its own.</div></div></div>
+      <div class="faq-item"><button class="faq-q">How fast will I actually see results? <span class="pm">+</span></button><div class="faq-a"><div class="inner">The retention engine is engineered to show measurable lift within 30 days. If it doesn't, that's on us. No-show recovery and package nudges typically show a dollar impact in the first few weeks.</div></div></div>
+      <div class="faq-item"><button class="faq-q">Can I start small and add more later? <span class="pm">+</span></button><div class="faq-a"><div class="inner">Absolutely — that's the design. Start with retention, layer in marketing intelligence and full operations whenever you're ready. There's no migration: capabilities just expand and new features light up.</div></div></div>
+      <div class="faq-item"><button class="faq-q">My staff is not technical. Is this a burden on them? <span class="pm">+</span></button><div class="faq-a"><div class="inner">The opposite. The whole point is that AIKAB does the remembering. Front desk closes out an appointment — that's it. The follow-up, the reminder, the no-show recovery, the churn save: all automatic.</div></div></div>
+    </div>
+    <div class="center" style="margin-top:34px" class="reveal">
+      <button class="btn btn-primary" data-go="intake">↑ Back to top — finish my profile</button>
+    </div>
+  </div>
+</section>
+
+<!-- ══ FOOTER ═══════════════════════════════════════════════ -->
+<footer>
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="brand-mark"></span><span class="brand-name">AIKAB</span></a>
+    <div class="fcols">
+      <span>Growth OS for Med Spas</span>
+      <span>Retention · Growth · Operations</span>
+      <span>onboarding@aikab.com</span>
+    </div>
+    <span style="font-size:12px;color:#8a8170">© 2026 AIKAB. Built for the people who run med spas.</span>
+  </div>
+</footer>
+
+<div class="toast" id="toast"><span id="toastIcon">✓</span><span id="toastMsg">Saved</span></div>
+
+<script>
+/* ════════════════════════════════════════════════════════════
+   STATE + PERSISTENCE
+   ════════════════════════════════════════════════════════════ */
+const STORE_KEY = 'aikab_onboarding_v1';
+const data = loadState() || {
+  spa:{}, team:{roles:[]}, services:{list:[]}, stack:{}, pains:{list:[]},
+  goals:{retention:15,noshow:40,hours:10}, volume:{}, contact:{}
+};
+function loadState(){ try{ return JSON.parse(localStorage.getItem(STORE_KEY)); }catch(e){ return null; } }
+function saveState(){ try{ localStorage.setItem(STORE_KEY, JSON.stringify(data)); }catch(e){} }
+function getPath(obj,path){ return path.split('.').reduce((o,k)=> (o||{})[k], obj); }
+function setPath(obj,path,val){
+  const ks=path.split('.'); let o=obj;
+  for(let i=0;i<ks.length-1;i++){ o[ks[i]]=o[ks[i]]||{}; o=o[ks[i]]; }
+  o[ks[ks.length-1]]=val;
+}
+
+/* ════════════════════════════════════════════════════════════
+   TOAST
+   ════════════════════════════════════════════════════════════ */
+let toastTimer;
+function toast(msg, icon='✓'){
+  const t=document.getElementById('toast');
+  document.getElementById('toastMsg').textContent=msg;
+  document.getElementById('toastIcon').textContent=icon;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2600);
+}
+
+/* ════════════════════════════════════════════════════════════
+   NAV — smooth scroll + active highlight + progress bar
+   ════════════════════════════════════════════════════════════ */
+document.querySelectorAll('[data-go]').forEach(el=>{
+  el.addEventListener('click',()=>{
+    const t=document.getElementById(el.dataset.go);
+    if(t) t.scrollIntoView({behavior:'smooth',block:'start'});
+  });
+});
+const sections=['intake','walkthrough','process','faq'];
+const navBtns=document.querySelectorAll('#navLinks button');
+function onScroll(){
+  // progress bar
+  const h=document.documentElement;
+  const pct=(h.scrollTop)/(h.scrollHeight-h.clientHeight)*100;
+  document.getElementById('navProgress').style.width=Math.min(100,pct)+'%';
+  // active section
+  let cur='intake';
+  sections.forEach(id=>{
+    const s=document.getElementById(id);
+    if(s && s.getBoundingClientRect().top<200) cur=id;
+  });
+  navBtns.forEach(b=>b.classList.toggle('active', b.dataset.go===cur));
+}
+window.addEventListener('scroll',onScroll,{passive:true});
+onScroll();
+
+/* ════════════════════════════════════════════════════════════
+   SCROLL REVEAL
+   ════════════════════════════════════════════════════════════ */
+const revObs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); revObs.unobserve(e.target); } });
+},{threshold:.12});
+document.querySelectorAll('.reveal').forEach(el=>revObs.observe(el));
+
+/* ════════════════════════════════════════════════════════════
+   HERO COUNTERS
+   ════════════════════════════════════════════════════════════ */
+const heroObs=new IntersectionObserver((entries)=>{
+  entries.forEach(e=>{
+    if(!e.isIntersecting) return;
+    const el=e.target, target=+el.dataset.count, suffix=el.dataset.suffix||'';
+    const prefix=(el.textContent.trim().startsWith('$'))?'$':'';
+    let cur=0, steps=46, inc=target/steps;
+    const tick=()=>{ cur+=inc; if(cur>=target){ el.textContent=prefix+target+suffix; }
+      else{ el.textContent=prefix+Math.round(cur)+suffix; requestAnimationFrame(tick); } };
+    tick(); heroObs.unobserve(el);
+  });
+},{threshold:.5});
+document.querySelectorAll('[data-count]').forEach(el=>heroObs.observe(el));
+
+/* ════════════════════════════════════════════════════════════
+   WIZARD ENGINE
+   ════════════════════════════════════════════════════════════ */
+const panels=[...document.querySelectorAll('.wiz-panel')];
+const TOTAL=panels.length;
+let step=0;
+const wizDots=document.getElementById('wizDots');
+const wizStepNum=document.getElementById('wizStepNum');
+const wizPrev=document.getElementById('wizPrev');
+const wizNext=document.getElementById('wizNext');
+
+// build dots
+panels.forEach((_,i)=>{
+  const d=document.createElement('div'); d.className='wiz-dot';
+  d.addEventListener('click',()=>{ if(i<=maxReached) goStep(i); });
+  wizDots.appendChild(d);
+});
+let maxReached=0;
+
+function goStep(n){
+  step=Math.max(0,Math.min(TOTAL-1,n));
+  panels.forEach((p,i)=>p.classList.toggle('active',i===step));
+  [...wizDots.children].forEach((d,i)=>{
+    d.classList.toggle('done', i<step);
+    d.classList.toggle('current', i===step);
+  });
+  wizStepNum.textContent=`Step ${step+1} / ${TOTAL}`;
+  wizPrev.disabled=step===0;
+  wizNext.textContent = step===TOTAL-1 ? 'Done ✓' : 'Next →';
+  maxReached=Math.max(maxReached,step);
+  if(step===TOTAL-1) buildSummary();
+}
+wizPrev.addEventListener('click',()=>{ goStep(step-1); document.getElementById('wizard').scrollIntoView({behavior:'smooth',block:'start'}); });
+wizNext.addEventListener('click',()=>{
+  if(step===TOTAL-1){ buildSummary(); toast('Profile complete — scroll down for the walkthrough','🎉'); document.getElementById('walkthrough').scrollIntoView({behavior:'smooth'}); return; }
+  goStep(step+1);
+  document.getElementById('wizard').scrollIntoView({behavior:'smooth',block:'start'});
+});
+
+/* ── Bind: text/select inputs ────────────────────────────────── */
+document.querySelectorAll('[data-k]').forEach(el=>{
+  const k=el.dataset.k;
+  const existing=getPath(data,k);
+  if(existing!==undefined && existing!=='') el.value=existing;
+  el.addEventListener('input',()=>{ setPath(data,k,el.value); saveState(); });
+  el.addEventListener('change',()=>{ setPath(data,k,el.value); saveState(); });
+});
+
+/* ── Bind: radio option cards (single-select) ────────────────── */
+document.querySelectorAll('[data-radio]').forEach(group=>{
+  const k=group.dataset.radio;
+  const opts=group.querySelectorAll('.opt');
+  opts.forEach(o=>{
+    if(getPath(data,k)===o.dataset.val) o.classList.add('sel');
+    o.addEventListener('click',()=>{
+      opts.forEach(x=>x.classList.remove('sel'));
+      o.classList.add('sel'); setPath(data,k,o.dataset.val); saveState();
+    });
+  });
+});
+
+/* ── Bind: radio chips (single-select chip) ──────────────────── */
+document.querySelectorAll('[data-radio-chip]').forEach(group=>{
+  const k=group.dataset.radioChip;
+  const chips=group.querySelectorAll('.chip');
+  chips.forEach(c=>{
+    if(getPath(data,k)===c.dataset.val) c.classList.add('sel');
+    c.addEventListener('click',()=>{
+      chips.forEach(x=>x.classList.remove('sel'));
+      c.classList.add('sel'); setPath(data,k,c.dataset.val); saveState();
+    });
+  });
+});
+
+/* ── Bind: multi-select chips / rank items ───────────────────── */
+document.querySelectorAll('[data-multi]').forEach(group=>{
+  const k=group.dataset.multi;
+  let arr=getPath(data,k)||[];
+  const items=group.querySelectorAll('.chip,.rank-item');
+  const refreshBadges=()=>{
+    // for rank list: number the selected items in order
+    if(group.classList.contains('rank')){
+      let n=0;
+      items.forEach(it=>{
+        const badge=it.querySelector('.rank-badge');
+        if(it.classList.contains('sel')){ n++; badge.textContent=n; }
+        else badge.textContent='';
+      });
+    }
+  };
+  items.forEach(it=>{
+    if(arr.includes(it.dataset.val)) it.classList.add('sel');
+    it.addEventListener('click',()=>{
+      arr=getPath(data,k)||[];
+      if(it.classList.contains('sel')){
+        it.classList.remove('sel'); arr=arr.filter(v=>v!==it.dataset.val);
+      } else {
+        it.classList.add('sel'); arr.push(it.dataset.val);
+      }
+      setPath(data,k,arr); saveState(); refreshBadges();
+    });
+  });
+  refreshBadges();
+});
+
+/* ── Bind: sliders ───────────────────────────────────────────── */
+document.querySelectorAll('[data-slider]').forEach(sl=>{
+  const k=sl.dataset.slider, out=document.getElementById(sl.dataset.out), fmt=sl.dataset.fmt;
+  const existing=getPath(data,k);
+  if(existing!==undefined) sl.value=existing;
+  const render=()=>{ out.textContent=fmt.replace('{v}',sl.value); };
+  render();
+  sl.addEventListener('input',()=>{ setPath(data,k,+sl.value); render(); saveState(); });
+});
+
+/* ════════════════════════════════════════════════════════════
+   SUMMARY BUILDER
+   ════════════════════════════════════════════════════════════ */
+function row(k,v){ return v ? `<div class="row"><span class="k">${k}</span><span class="v">${escapeHtml(v)}</span></div>` : ''; }
+function escapeHtml(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
+function buildSummary(){
+  const d=data;
+  const list=a=>(a&&a.length)?a.join(', '):'—';
+  const html=`
+    <h4>The spa</h4>
+    ${row('Name', d.spa.name)}
+    ${row('Location', d.spa.city)}
+    ${row('Years open', d.spa.age)}
+    ${row('Locations', d.spa.locations)}
+    ${row('Revenue band', d.spa.revenue)}
+    <h4>Team</h4>
+    ${row('Team size', d.team.size)}
+    ${row('Roles using AIKAB', list(d.team.roles))}
+    <h4>Services</h4>
+    ${row('Treatments offered', list(d.services.list))}
+    ${row('Packages / memberships', d.services.packages)}
+    <h4>Current stack</h4>
+    ${row('Booking system', d.stack.booking)}
+    ${row('EMR / charting', d.stack.emr)}
+    ${row('Marketing today', d.stack.marketing)}
+    ${row('Client messaging today', d.stack.messaging)}
+    ${row('Biggest frustration', d.stack.frustration)}
+    <h4>Where revenue is leaking</h4>
+    ${row('Pain points (ranked)', list(d.pains.list))}
+    <h4>Goals &amp; expectations</h4>
+    ${row('Retention lift target', '+'+(d.goals.retention||15)+' pts')}
+    ${row('No-show reduction target', (d.goals.noshow||40)+'%')}
+    ${row('Admin hours wanted back', (d.goals.hours||10)+' hrs/week')}
+    ${row('Timeline', d.goals.timeline)}
+    ${row('Dream outcome', d.goals.notes)}
+    <h4>Scale</h4>
+    ${row('Active contacts', d.volume.contacts)}
+    ${row('Appointments / month', d.volume.appts)}
+    ${row('Expected message volume', d.volume.messaging)}
+    ${row('Clinical compliance', d.volume.compliance)}
+    <h4>Contact</h4>
+    ${row('Name', d.contact.name)}
+    ${row('Role', d.contact.role)}
+    ${row('Email', d.contact.email)}
+    ${row('Phone', d.contact.phone)}
+    ${row('Best time for kickoff', d.contact.besttime)}
+  `;
+  document.getElementById('summaryBox').innerHTML=html;
+  return html;
+}
+
+/* plain-text version */
+function summaryText(){
+  const d=data;
+  const list=a=>(a&&a.length)?a.join(', '):'—';
+  const L=(k,v)=> v?`${k}: ${v}\n`:'';
+  return `AIKAB — CLIENT ONBOARDING PROFILE\nGenerated ${new Date().toLocaleString()}\n`+
+  `\n— THE SPA —\n`+L('Name',d.spa.name)+L('Location',d.spa.city)+L('Years open',d.spa.age)+L('Locations',d.spa.locations)+L('Revenue band',d.spa.revenue)+
+  `\n— TEAM —\n`+L('Team size',d.team.size)+L('Roles using AIKAB',list(d.team.roles))+
+  `\n— SERVICES —\n`+L('Treatments',list(d.services.list))+L('Packages/memberships',d.services.packages)+
+  `\n— CURRENT STACK —\n`+L('Booking',d.stack.booking)+L('EMR',d.stack.emr)+L('Marketing',d.stack.marketing)+L('Messaging',d.stack.messaging)+L('Biggest frustration',d.stack.frustration)+
+  `\n— PAIN POINTS (ranked) —\n`+list(d.pains.list)+`\n`+
+  `\n— GOALS & EXPECTATIONS —\n`+L('Retention lift target','+'+(d.goals.retention||15)+' pts')+L('No-show reduction','+'+(d.goals.noshow||40)+'%')+L('Admin hours back',(d.goals.hours||10)+' hrs/wk')+L('Timeline',d.goals.timeline)+L('Dream outcome',d.goals.notes)+
+  `\n— SCALE —\n`+L('Active contacts',d.volume.contacts)+L('Appointments/month',d.volume.appts)+L('Expected message volume',d.volume.messaging)+L('Clinical compliance',d.volume.compliance)+
+  `\n— CONTACT —\n`+L('Name',d.contact.name)+L('Role',d.contact.role)+L('Email',d.contact.email)+L('Phone',d.contact.phone)+L('Best time',d.contact.besttime);
+}
+
+/* ── Summary action buttons ──────────────────────────────────── */
+document.getElementById('btnBuild').addEventListener('click',()=>{
+  buildSummary();
+  document.getElementById('successBanner').classList.add('show');
+  toast('Summary built','📋'); fireConfetti();
+});
+document.getElementById('btnCopy').addEventListener('click',()=>{
+  navigator.clipboard.writeText(summaryText()).then(()=>toast('Copied to clipboard','📋'))
+    .catch(()=>toast('Copy failed — select & copy manually','⚠️'));
+});
+document.getElementById('btnTxt').addEventListener('click',()=>{
+  download('aikab-onboarding.txt', summaryText(), 'text/plain');
+  toast('Downloaded .txt','⬇️');
+});
+document.getElementById('btnJson').addEventListener('click',()=>{
+  download('aikab-onboarding.json', JSON.stringify({...data, generatedAt:new Date().toISOString()}, null, 2), 'application/json');
+  toast('Downloaded .json','⬇️');
+});
+document.getElementById('btnEmail').addEventListener('click',()=>{
+  const subj=encodeURIComponent('AIKAB onboarding — '+(data.spa.name||'new spa'));
+  const body=encodeURIComponent(summaryText());
+  window.location.href=`mailto:onboarding@aikab.com?subject=${subj}&body=${body}`;
+  toast('Opening your email app…','✉️');
+});
+document.getElementById('btnSubmit').addEventListener('click', async ()=>{
+  const btn=document.getElementById('btnSubmit');
+  if(!data.contact || !data.contact.email || !/^\S+@\S+\.\S+$/.test(data.contact.email)){
+    toast('Add your email first (this step)','⚠️'); return;
+  }
+  buildSummary();
+  const orig=btn.textContent; btn.disabled=true; btn.textContent='Sending…';
+  try{
+    const res=await fetch('/api/submit',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({...data, generatedAt:new Date().toISOString()})
+    });
+    if(!res.ok){
+      const e=await res.json().catch(()=>({})); throw new Error(e.error || ('HTTP '+res.status));
+    }
+    const out=await res.json();
+    document.getElementById('successBanner').classList.add('show');
+    toast('Sent to AIKAB — ref '+(out.id||'saved'),'✅'); fireConfetti();
+    btn.textContent='Sent ✓'; btn.disabled=true;
+  }catch(err){
+    toast('Could not send: '+err.message+' — use Download or Email instead','⚠️');
+    btn.disabled=false; btn.textContent=orig;
+  }
+});
+document.getElementById('btnReset').addEventListener('click',()=>{
+  if(!confirm('Clear everything and start over? This cannot be undone.')) return;
+  localStorage.removeItem(STORE_KEY); location.reload();
+});
+function download(name,content,type){
+  const blob=new Blob([content],{type}); const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+/* ════════════════════════════════════════════════════════════
+   CONFETTI
+   ════════════════════════════════════════════════════════════ */
+function fireConfetti(){
+  const colors=['#3F7A66','#B58A3E','#4F8A5B','#2E5C4D','#E1EDE6'];
+  for(let i=0;i<70;i++){
+    const c=document.createElement('div');
+    c.className='confetti';
+    c.style.left=Math.random()*100+'vw';
+    c.style.background=colors[i%colors.length];
+    c.style.transform=`rotate(${Math.random()*360}deg)`;
+    const dur=2.4+Math.random()*1.8;
+    c.style.transition=`transform ${dur}s linear, top ${dur}s linear, opacity ${dur}s`;
+    document.body.appendChild(c);
+    requestAnimationFrame(()=>{
+      c.style.top='110vh';
+      c.style.transform=`translateX(${(Math.random()-.5)*240}px) rotate(${Math.random()*900}deg)`;
+      c.style.opacity='0';
+    });
+    setTimeout(()=>c.remove(),dur*1000+200);
+  }
+}
+
+/* ════════════════════════════════════════════════════════════
+   FEATURE WALKTHROUGH — tabs
+   ════════════════════════════════════════════════════════════ */
+const featTabs=document.querySelectorAll('.feature-tab');
+const featStages=document.querySelectorAll('.feature-stage');
+featTabs.forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    const f=tab.dataset.feat;
+    featTabs.forEach(t=>t.classList.toggle('active',t===tab));
+    featStages.forEach(s=>s.classList.toggle('active',s.dataset.feat===f));
+  });
+});
+
+/* ── helper: small delay ─────────────────────────────────────── */
+const wait=ms=>new Promise(r=>setTimeout(r,ms));
+function lockBtn(btn){ btn.disabled=true; const o=btn.textContent; return ()=>{ btn.disabled=false; btn.textContent=o; }; }
+
+/* ════════════════════════════════════════════════════════════
+   DEMO 1 — Smart Follow-Up
+   ════════════════════════════════════════════════════════════ */
+const fuMessages=[
+  {day:1, text:"Hi Jordan — it's Radiance Med Spa 🌿 Just checking in after your Botox with Dr. Lee. Any tightness or questions? We're here.", meta:'Day 2 · settle-in check'},
+  {day:14, text:"Hi Jordan! Your Botox results should be looking their best now ✨ We'd love to hear how you feel. Ready to keep it up? Tap to rebook → ", meta:'Day 14 · results check-in'},
+  {day:75, text:"Hi Jordan — it's been about 11 weeks. To hold your results, now's the ideal window for your next visit. Same time with Dr. Lee? 👇", meta:'Day 75 · rebook nudge'}
+];
+async function runFollowup(btn){
+  const unlock=lockBtn(btn);
+  const tl=document.getElementById('fuTimeline').querySelectorAll('.tl-step');
+  const box=document.getElementById('fuMsgs');
+  box.innerHTML=''; tl.forEach(s=>s.classList.remove('fired'));
+  await wait(300);
+  tl[0].classList.add('fired');
+  toast('Appointment marked complete — sequence enqueued','📍');
+  await wait(700);
+  for(let i=0;i<fuMessages.length;i++){
+    tl[i+1].classList.add('fired');
+    // typing indicator
+    const typing=document.createElement('div'); typing.className='typing';
+    typing.innerHTML='<span></span><span></span><span></span>';
+    box.appendChild(typing); box.scrollTop=box.scrollHeight;
+    await wait(1100);
+    typing.remove();
+    const b=document.createElement('div'); b.className='bubble them';
+    b.innerHTML=escapeHtml(fuMessages[i].text)+`<div class="meta">${fuMessages[i].meta} · delivered</div>`;
+    box.appendChild(b); box.scrollTop=box.scrollHeight;
+    await wait(900);
+  }
+  toast('Full sequence delivered — 0 staff effort','✓');
+  unlock();
+}
+
+/* ════════════════════════════════════════════════════════════
+   DEMO 2 — No-Show Recovery
+   ════════════════════════════════════════════════════════════ */
+async function runNoshow(btn){
+  const unlock=lockBtn(btn);
+  const box=document.getElementById('nsMsgs');
+  const status=document.getElementById('nsStatus');
+  box.innerHTML='';
+  status.textContent='● no-show flagged 2:31 PM';
+  status.style.color='var(--danger)';
+  toast('Maya flagged as no-show','📵');
+  // system note
+  const note=(t)=>{ const n=document.createElement('div');
+    n.style.cssText='text-align:center;font-size:10px;color:var(--muted);margin:2px 0';
+    n.textContent=t; box.appendChild(n); box.scrollTop=box.scrollHeight; };
+  note('⏱ AIKAB recovery timer started — target: within 60 min');
+  await wait(1200);
+  note('✦ 58 minutes later…');
+  await wait(900);
+  const typing=document.createElement('div'); typing.className='typing';
+  typing.innerHTML='<span></span><span></span><span></span>';
+  box.appendChild(typing); box.scrollTop=box.scrollHeight;
+  await wait(1100); typing.remove();
+  const b1=document.createElement('div'); b1.className='bubble them';
+  b1.innerHTML=escapeHtml("Hi Maya — we missed you at 2 today, no worries at all 💛 Life happens! Want to grab another HydraFacial slot? One tap and you're rebooked →")+'<div class="meta">Recovery touch 1 · 58 min after no-show</div>';
+  box.appendChild(b1); box.scrollTop=box.scrollHeight;
+  status.textContent='● recovery message sent';
+  status.style.color='var(--warning)';
+  await wait(1400);
+  const b2=document.createElement('div'); b2.className='bubble me';
+  b2.innerHTML=escapeHtml("Oh thank you! Yes — do you have Friday morning? 🙏")+'<div class="meta">Maya replied · 6 min later</div>';
+  box.appendChild(b2); box.scrollTop=box.scrollHeight;
+  await wait(900);
+  note('✓ Rebooked Fri 10 AM — recovery attributed in analytics');
+  status.textContent='● client recovered ✓';
+  status.style.color='var(--success)';
+  toast('No-show recovered — revenue saved','✓');
+  unlock();
+}
+
+/* ════════════════════════════════════════════════════════════
+   DEMO 3 — Churn Radar
+   ════════════════════════════════════════════════════════════ */
+async function runChurn(btn){
+  const unlock=lockBtn(btn);
+  const list=document.getElementById('churnList');
+  const cards=[...list.querySelectorAll('.cl-card')];
+  // reset
+  cards.forEach(c=>{
+    c.classList.remove('flagged','saved');
+    c.querySelector('.fill').style.width='0';
+    c.querySelector('.pct').textContent='—';
+    const tag=c.querySelector('.cl-tag'); if(tag) tag.remove();
+  });
+  toast('Running nightly churn scan across all clients…','📡');
+  await wait(700);
+  // animate meters
+  for(const c of cards){
+    const risk=+c.dataset.risk;
+    const fill=c.querySelector('.fill');
+    const pct=c.querySelector('.pct');
+    fill.style.background = risk>=70?'var(--danger)': risk>=40?'var(--warning)':'var(--success)';
+    fill.style.width=risk+'%';
+    let n=0; const iv=setInterval(()=>{ n+=Math.ceil(risk/22); if(n>=risk){n=risk;clearInterval(iv);} pct.textContent=n+'%'; },40);
+    await wait(550);
+  }
+  await wait(400);
+  // sort by risk desc
+  cards.sort((a,b)=>b.dataset.risk-a.dataset.risk).forEach(c=>list.appendChild(c));
+  await wait(700);
+  // flag & save
+  for(const c of cards){
+    const risk=+c.dataset.risk;
+    const tag=document.createElement('span'); tag.className='cl-tag';
+    if(risk>=70){
+      c.classList.add('flagged'); tag.classList.add('risk'); tag.textContent='AT RISK';
+      c.querySelector('.cl-meter').before(tag);
+      await wait(600);
+      c.classList.remove('flagged'); c.classList.add('saved');
+      tag.className='cl-tag saved'; tag.textContent='WIN-BACK SENT';
+      c.querySelector('.cd').textContent='AIKAB sent a "we miss you" →';
+    } else {
+      tag.classList.add('ok'); tag.textContent='ON TRACK';
+      c.querySelector('.cl-meter').before(tag);
+    }
+    await wait(400);
+  }
+  toast('2 at-risk clients caught & win-backs launched','✓');
+  unlock();
+}
+
+/* ════════════════════════════════════════════════════════════
+   DEMO 4 — Protocol Tracking
+   ════════════════════════════════════════════════════════════ */
+let protoSession=3;
+async function runProtocol(btn){
+  const dots=[...document.getElementById('protoDots').children];
+  const status=document.getElementById('protoStatus');
+  if(protoSession>6){
+    // reset
+    protoSession=3;
+    dots.forEach((d,i)=>{
+      d.className='proto-dot'+(i<2?' done':i===2?' next':'');
+      d.textContent=i+1;
+    });
+    status.textContent='Session 3 of 6 is due. Tap below to complete it and watch AIKAB re-plan.';
+    btn.textContent='▶ Complete this session';
+    return;
+  }
+  const unlock=lockBtn(btn);
+  const idx=protoSession-1;
+  dots[idx].className='proto-dot done';
+  dots[idx].textContent='✓';
+  toast(`Session ${protoSession} of 6 completed`,'✨');
+  await wait(500);
+  protoSession++;
+  if(protoSession<=6){
+    dots[protoSession-1].className='proto-dot next';
+    status.innerHTML=`✓ Session ${protoSession-1} done. AIKAB recalculated from <b>today</b> — next session optimal in <b>~4 weeks</b>. A reminder will fire 7 days before, and again if Dana slips. Provider chart now shows <b>"Session ${protoSession} of 6"</b>.`;
+  } else {
+    status.innerHTML=`🎉 <b>Protocol complete — all 6 sessions.</b> Dana finished a plan most clients quit at session 2. AIKAB now enrolls her in a maintenance sequence.`;
+    toast('Protocol completed — revenue fully captured','🎉');
+    fireConfetti();
+  }
+  unlock();
+  btn.textContent = protoSession>6 ? '↻ Run again' : '▶ Complete next session';
+}
+
+/* ════════════════════════════════════════════════════════════
+   DEMO 5 — Package Recovery
+   ════════════════════════════════════════════════════════════ */
+async function runPackage(btn){
+  const unlock=lockBtn(btn);
+  const wrap=document.getElementById('liability');
+  const num=document.getElementById('liabNum');
+  const status=document.getElementById('liabStatus');
+  const bars=[...document.getElementById('liabBars').children];
+  wrap.classList.remove('recovered');
+  toast('Nightly scan: nudging 31 dormant packages…','📦');
+  status.textContent='Sending day-30 / day-60 / day-90 nudges with one-tap rebook links…';
+  await wait(1100);
+  // animate bars shrinking + recolor
+  let stages=[
+    'Day-30 gentle reminders sent → 9 sessions rebooked',
+    'Day-60 booking links sent → 11 more rebooked',
+    'Day-90 expiry nudges sent → 7 more rebooked'
+  ];
+  let liability=24800;
+  for(let i=0;i<bars.length;i++){
+    bars[i].classList.add('active');
+    const h=parseInt(bars[i].style.height);
+    bars[i].style.height=Math.max(8,h*0.42)+'px';
+    liability-=Math.round(24800/bars.length*0.78);
+    num.textContent='$'+liability.toLocaleString();
+    if(i<stages.length) status.textContent=stages[i];
+    await wait(700);
+  }
+  num.textContent='$5,300';
+  wrap.classList.add('recovered');
+  status.innerHTML='✓ <b>$19,500 of paid-for revenue recovered</b> — 27 of 31 packages reactivated, all automatically.';
+  toast('$19,500 recovered from dormant packages','✓');
+  fireConfetti();
+  unlock();
+}
+
+/* ════════════════════════════════════════════════════════════
+   DEMO 6 — Marketing Attribution
+   ════════════════════════════════════════════════════════════ */
+async function runAttribution(btn){
+  const unlock=lockBtn(btn);
+  const rows=[...document.getElementById('funnel').querySelectorAll('.fn-row')];
+  rows.forEach(r=>{ r.querySelector('.fn-fill').style.width='0'; r.querySelector('.fv').textContent='0'; });
+  toast('Tracing every click → to a completed visit…','🔍');
+  await wait(400);
+  for(const r of rows){
+    const fill=r.querySelector('.fn-fill');
+    const vEl=r.querySelector('.fv');
+    const target=+vEl.dataset.v.replace(/,/g,'');
+    fill.style.width=fill.dataset.w+'%';
+    let n=0; const steps=30, inc=target/steps;
+    const iv=setInterval(()=>{ n+=inc; if(n>=target){n=target;clearInterval(iv);} vEl.textContent=Math.round(n).toLocaleString(); },28);
+    await wait(750);
+  }
+  await wait(300);
+  toast('221 visits traced back to source — true ROI, by channel','✓');
+  unlock();
+}
+
+/* ════════════════════════════════════════════════════════════
+   DEMO 7 — Analytics Dashboard
+   ════════════════════════════════════════════════════════════ */
+async function runAnalytics(btn){
+  const unlock=lockBtn(btn);
+  const bars=[...document.getElementById('anBars').children];
+  bars.forEach(b=>b.style.height='0');
+  await wait(200);
+  for(const b of bars){
+    b.style.height=b.dataset.h+'%';
+    await wait(150);
+  }
+  // count up KPIs
+  countUp(document.getElementById('kpi1'),18,'+','');
+  countUp(document.getElementById('kpi2'),21400,'$','',true);
+  countUp(document.getElementById('kpi3'),1247,'','',true);
+  toast('Your numbers, live — updated the moment you log in','📊');
+  unlock();
+}
+function countUp(el,target,prefix,suffix,comma){
+  let n=0, steps=40, inc=target/steps;
+  const tick=()=>{ n+=inc; if(n>=target){ el.textContent=prefix+(comma?target.toLocaleString():target)+suffix; }
+    else{ el.textContent=prefix+(comma?Math.round(n).toLocaleString():Math.round(n))+suffix; requestAnimationFrame(tick); } };
+  tick();
+}
+
+/* ── wire up all demo buttons ────────────────────────────────── */
+const runners={followup:runFollowup,noshow:runNoshow,churn:runChurn,protocol:runProtocol,package:runPackage,attribution:runAttribution,analytics:runAnalytics};
+document.querySelectorAll('[data-run]').forEach(btn=>{
+  btn.addEventListener('click',()=>runners[btn.dataset.run](btn));
+});
+
+/* ════════════════════════════════════════════════════════════
+   FAQ accordion
+   ════════════════════════════════════════════════════════════ */
+document.querySelectorAll('.faq-q').forEach(q=>{
+  q.addEventListener('click',()=>{
+    const a=q.nextElementSibling;
+    const open=q.classList.contains('open');
+    // close others
+    document.querySelectorAll('.faq-q').forEach(o=>{ o.classList.remove('open'); o.nextElementSibling.style.maxHeight=null; });
+    if(!open){ q.classList.add('open'); a.style.maxHeight=a.scrollHeight+'px'; }
+  });
+});
+
+/* ════════════════════════════════════════════════════════════
+   INIT
+   ════════════════════════════════════════════════════════════ */
+goStep(0);
+// if returning user has data, jump them a friendly note
+if(data.spa && data.spa.name){
+  setTimeout(()=>toast('Welcome back, '+data.spa.name+' — your progress was saved','👋'),700);
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AIKAB — Admin · Client Onboarding</title>
+<meta name="robots" content="noindex,nofollow" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAF7F2; --surface:#FFFFFF; --surface-2:#F3EEE4; --surface-3:#EAE3D4;
+  --line:#E8E1D2; --line-2:#D1C8B4;
+  --fg:#2A2A28; --fg-2:#4A4A46; --muted:#7A7568; --muted-2:#9E988A;
+  --accent:#3F7A66; --accent-2:#2E5C4D; --accent-3:#E1EDE6;
+  --gold:#B58A3E; --success:#4F8A5B; --warning:#B58A3E; --danger:#B0473F; --danger-soft:#F6E3E1;
+  --r-sm:8px; --r-md:12px; --r-lg:18px; --r-pill:999px;
+  --serif:'Fraunces', Georgia, serif;
+  --sans:'Inter', system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  --mono:'JetBrains Mono', ui-monospace, Menlo, monospace;
+  --shadow-sm:0 1px 2px rgba(20,30,25,.05), 0 2px 6px rgba(20,30,25,.04);
+  --shadow:0 14px 44px -16px rgba(16,32,24,.22);
+  --shadow-lg:0 30px 70px -22px rgba(16,32,24,.32);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--fg);
+  font-family:var(--sans); font-size:14px; line-height:1.55;
+  -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale;
+}
+.serif{font-family:var(--serif)}
+.mono{font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted)}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-.02em;line-height:1.18}
+h2{font-family:var(--serif);font-weight:500;font-size:28px;letter-spacing:-.02em}
+.wrap{max-width:1200px;margin:0 auto;padding:0 clamp(16px,4vw,40px)}
+
+/* ── Nav ─────────────────────────────────────────────────────── */
+.nav{position:sticky;top:0;z-index:30;background:rgba(250,247,242,.86);
+  backdrop-filter:blur(14px) saturate(1.2);border-bottom:1px solid var(--line)}
+.nav-inner{display:flex;align-items:center;justify-content:space-between;
+  padding:14px clamp(16px,4vw,40px); max-width:1200px; margin:0 auto; gap:12px}
+.brand{display:flex;align-items:center;gap:10px;font-weight:600}
+.brand-mark{width:24px;height:24px;background:linear-gradient(135deg,var(--accent),var(--accent-2));
+  border-radius:7px;box-shadow:0 0 0 4px rgba(63,122,102,.12);position:relative}
+.brand-mark::after{content:'';position:absolute;inset:6px;background:#fff;border-radius:3px;opacity:.3}
+.brand-tag{font-family:var(--mono);font-size:10px;background:var(--fg);color:#fff;
+  padding:3px 9px;border-radius:var(--r-pill);letter-spacing:.12em}
+.nav-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.btn{font-family:var(--sans);font-size:13px;font-weight:600;cursor:pointer;
+  border-radius:var(--r-pill);padding:8px 16px;border:1px solid transparent;
+  transition:transform .12s,box-shadow .18s,background .18s,color .18s;
+  display:inline-flex;align-items:center;gap:7px}
+.btn:active{transform:translateY(1px) scale(.99)}
+.btn-primary{background:var(--accent);color:#fff;box-shadow:0 4px 14px -4px rgba(63,122,102,.55)}
+.btn-primary:hover{background:var(--accent-2)}
+.btn-ghost{background:var(--surface);color:var(--fg-2);border-color:var(--line-2)}
+.btn-ghost:hover{background:var(--surface-2);color:var(--accent)}
+.btn-danger{background:var(--surface);color:var(--danger);border-color:var(--danger-soft)}
+.btn-danger:hover{background:var(--danger-soft)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* ── Login overlay ───────────────────────────────────────────── */
+.gate{position:fixed;inset:0;background:var(--bg);z-index:100;
+  display:flex;align-items:center;justify-content:center;padding:20px}
+.gate-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);
+  padding:36px clamp(24px,4vw,44px);box-shadow:var(--shadow-lg);max-width:430px;width:100%}
+.gate-card h1{font-family:var(--serif);font-weight:500;font-size:28px;margin-bottom:6px}
+.gate-card p{color:var(--muted);margin:0 0 22px;font-size:13.5px}
+.gate-card label{display:block;font-size:12px;font-weight:600;margin-bottom:6px}
+.gate-card input{width:100%;padding:12px 14px;font-family:var(--mono);font-size:13px;
+  border:1px solid var(--line-2);border-radius:var(--r-md);background:var(--bg);
+  outline:none;transition:.15s}
+.gate-card input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-3);background:var(--surface)}
+.gate-err{color:var(--danger);font-size:12px;margin-top:8px;min-height:16px}
+.gate-help{margin-top:18px;padding:12px 14px;background:var(--surface-2);border-radius:var(--r-md);
+  font-size:12px;color:var(--fg-2);line-height:1.55}
+.gate-help code{font-family:var(--mono);font-size:11px;background:#fff;padding:1px 6px;border-radius:4px;border:1px solid var(--line)}
+
+/* ── Layout ──────────────────────────────────────────────────── */
+section.block{padding:clamp(24px,4vw,40px) 0}
+.sec-head{margin-bottom:20px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.sec-head .mono{display:block;margin-bottom:8px}
+
+/* ── KPI cards ───────────────────────────────────────────────── */
+.kpis{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+@media(min-width:760px){.kpis{grid-template-columns:repeat(4,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:16px 18px;box-shadow:var(--shadow-sm)}
+.kpi .l{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:.12em;margin-bottom:6px}
+.kpi .v{font-family:var(--serif);font-weight:600;font-size:30px;color:var(--accent-2);line-height:1}
+.kpi .s{font-size:12px;color:var(--muted-2);margin-top:6px}
+
+/* ── Analytics ───────────────────────────────────────────────── */
+.analytics-grid{display:grid;grid-template-columns:1fr;gap:18px}
+@media(min-width:880px){.analytics-grid{grid-template-columns:1fr 1fr}}
+.an-card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:18px 20px;box-shadow:var(--shadow-sm)}
+.an-card h3{font-family:var(--serif);font-weight:500;font-size:17px;margin-bottom:12px}
+.bar-row{display:flex;align-items:center;gap:10px;margin-bottom:8px;font-size:12.5px}
+.bar-row .bl{flex:1;min-width:0;color:var(--fg-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bar-row .bt{width:46%;background:var(--surface-3);border-radius:var(--r-pill);height:8px;overflow:hidden}
+.bar-row .bf{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent-2));
+  width:0;transition:width .8s cubic-bezier(.22,1,.36,1)}
+.bar-row .bn{font-family:var(--mono);font-size:11px;color:var(--accent-2);min-width:32px;text-align:right}
+.goal-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
+.goal{text-align:center;padding:12px;background:var(--surface-2);border-radius:var(--r-md)}
+.goal .v{font-family:var(--serif);font-size:24px;font-weight:600;color:var(--accent-2)}
+.goal .l{font-size:11px;color:var(--muted)}
+
+/* ── Submissions list ────────────────────────────────────────── */
+.toolbar{display:flex;gap:10px;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+.toolbar input{flex:1;min-width:180px;padding:10px 14px;border:1px solid var(--line-2);
+  border-radius:var(--r-pill);background:var(--surface);font-size:13px;outline:none}
+.toolbar input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-3)}
+.submissions{display:grid;grid-template-columns:1fr;gap:10px}
+@media(min-width:760px){.submissions{grid-template-columns:1fr 1fr}}
+.sub{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:14px 16px;cursor:pointer;transition:.15s;box-shadow:var(--shadow-sm);
+  display:flex;flex-direction:column;gap:6px}
+.sub:hover{transform:translateY(-2px);box-shadow:var(--shadow);border-color:var(--accent)}
+.sub .st{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.sub .nm{font-family:var(--serif);font-weight:600;font-size:17px}
+.sub .dt{font-family:var(--mono);font-size:10px;color:var(--muted)}
+.sub .meta{font-size:12.5px;color:var(--fg-2);display:flex;gap:14px;flex-wrap:wrap}
+.sub .meta b{color:var(--fg)}
+.sub .pains{display:flex;flex-wrap:wrap;gap:5px;margin-top:4px}
+.pain-chip{font-size:10.5px;background:var(--accent-3);color:var(--accent-2);
+  padding:3px 8px;border-radius:var(--r-pill);font-weight:600}
+
+.empty{text-align:center;padding:50px 20px;color:var(--muted);background:var(--surface);
+  border:1px dashed var(--line-2);border-radius:var(--r-md)}
+.empty h3{color:var(--fg);margin-bottom:6px}
+
+/* ── Detail drawer ───────────────────────────────────────────── */
+.drawer{position:fixed;inset:0;z-index:60;display:none;background:rgba(20,25,22,.42);
+  backdrop-filter:blur(3px)}
+.drawer.open{display:flex;justify-content:flex-end;animation:fade .25s}
+@keyframes fade{from{opacity:0}to{opacity:1}}
+.drawer-panel{width:100%;max-width:760px;height:100%;background:var(--bg);overflow-y:auto;
+  box-shadow:var(--shadow-lg);animation:slidein .35s cubic-bezier(.22,1,.36,1)}
+@keyframes slidein{from{transform:translateX(40px);opacity:.6}to{transform:none;opacity:1}}
+.drawer-hd{position:sticky;top:0;background:rgba(250,247,242,.94);backdrop-filter:blur(10px);
+  padding:16px clamp(18px,3.5vw,32px);border-bottom:1px solid var(--line);
+  display:flex;justify-content:space-between;align-items:center;gap:12px;z-index:2}
+.drawer-hd .ttl{font-family:var(--serif);font-weight:600;font-size:20px}
+.drawer-hd .sub{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.drawer-body{padding:clamp(18px,3.5vw,32px)}
+.tabs{display:flex;gap:6px;border-bottom:1px solid var(--line);margin:-6px 0 18px}
+.tabbtn{background:none;border:none;padding:10px 14px;font-family:var(--sans);font-size:13px;
+  color:var(--fg-2);cursor:pointer;border-bottom:2px solid transparent;font-weight:500}
+.tabbtn:hover{color:var(--accent)}
+.tabbtn.active{color:var(--accent-2);border-color:var(--accent);font-weight:600}
+.tab-pane{display:none}.tab-pane.active{display:block}
+
+/* profile rendering */
+.profile-section{margin-bottom:18px}
+.profile-section h4{font-family:var(--serif);font-weight:600;font-size:14px;
+  color:var(--accent-2);margin-bottom:8px;letter-spacing:0;text-transform:uppercase;
+  font-family:var(--mono);font-size:11px;letter-spacing:.12em}
+.kv{display:grid;grid-template-columns:1fr;gap:4px;background:var(--surface);
+  border:1px solid var(--line);border-radius:var(--r-md);padding:12px 14px}
+.kv .row{display:flex;gap:10px;padding:4px 0;border-bottom:1px dotted var(--line);font-size:13px}
+.kv .row:last-child{border-bottom:none}
+.kv .row .k{color:var(--muted);min-width:140px;flex:none}
+.kv .row .v{color:var(--fg);font-weight:500;word-break:break-word}
+
+/* AI advisor */
+.advisor-card{background:linear-gradient(160deg,var(--surface),var(--surface-2));
+  border:1px solid var(--line);border-radius:var(--r-md);padding:18px 20px;margin-bottom:16px}
+.advisor-card h3{font-family:var(--serif);font-weight:600;font-size:18px;margin-bottom:4px}
+.advisor-card .desc{font-size:12.5px;color:var(--muted);margin-bottom:12px}
+.advice{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);
+  padding:18px 22px;font-size:14px;line-height:1.65;min-height:120px}
+.advice.loading{display:flex;align-items:center;justify-content:center;color:var(--muted);
+  font-size:13px;gap:10px}
+.spinner{width:18px;height:18px;border:2.5px solid var(--line-2);border-top-color:var(--accent);
+  border-radius:50%;animation:spin .9s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.advice h1,.advice h2{font-family:var(--serif);font-weight:600;margin:18px 0 8px;letter-spacing:-.01em}
+.advice h1{font-size:20px}.advice h2{font-size:16px;color:var(--accent-2)}
+.advice h3{font-size:14px;margin:14px 0 6px;color:var(--fg)}
+.advice p{margin:0 0 10px}
+.advice ul,.advice ol{margin:6px 0 12px;padding-left:22px}
+.advice li{margin-bottom:4px}
+.advice strong{color:var(--accent-2)}
+.advice code{font-family:var(--mono);font-size:12px;background:var(--surface-2);padding:1px 6px;border-radius:4px}
+.advice em{color:var(--fg-2)}
+.advice-meta{margin-top:10px;font-family:var(--mono);font-size:10px;color:var(--muted-2);letter-spacing:.06em}
+
+/* toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);
+  background:var(--fg);color:#fff;padding:11px 20px;border-radius:var(--r-pill);font-size:13px;
+  font-weight:500;box-shadow:var(--shadow-lg);z-index:200;transition:transform .35s cubic-bezier(.22,1,.36,1);
+  display:flex;align-items:center;gap:8px;max-width:90vw}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+@media(max-width:600px){
+  body{font-size:13.5px}
+  h2{font-size:22px}
+  .kpi .v{font-size:24px}
+  .drawer-panel{max-width:100%}
+  .nav-actions .btn{padding:7px 12px;font-size:12px}
+  .kv .row{flex-direction:column;gap:0}
+  .kv .row .k{min-width:0;font-size:11px}
+}
+</style>
+</head>
+<body>
+
+<!-- ══ LOGIN GATE ══════════════════════════════════════════════ -->
+<div class="gate" id="gate">
+  <div class="gate-card">
+    <h1>AIKAB <span class="serif" style="color:var(--accent);font-style:italic">admin</span></h1>
+    <p>Enter your admin token to view onboarding submissions and generate AIKAB recommendations.</p>
+    <label for="tokenInput">Admin token</label>
+    <input id="tokenInput" type="password" placeholder="paste your ADMIN_TOKEN…" autocomplete="off" />
+    <div class="gate-err" id="gateErr"></div>
+    <button class="btn btn-primary" id="gateGo" style="width:100%;justify-content:center;margin-top:14px">Unlock dashboard →</button>
+    <div class="gate-help">
+      The token must match the <code>ADMIN_TOKEN</code> env var you set in your Vercel project.
+      Running locally? Set it in <code>.env.local</code> and start <code>vercel dev</code>.
+    </div>
+  </div>
+</div>
+
+<!-- ══ NAV ═════════════════════════════════════════════════════ -->
+<nav class="nav">
+  <div class="nav-inner">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <span>AIKAB</span>
+      <span class="brand-tag">admin</span>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-ghost" id="btnRefresh">↻ Refresh</button>
+      <button class="btn btn-danger" id="btnLogout">Sign out</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ══ STATS + ANALYTICS ═══════════════════════════════════════ -->
+<section class="block">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="mono">Dashboard</span>
+        <h2>Client onboarding pipeline</h2>
+      </div>
+    </div>
+
+    <div class="kpis" id="kpis">
+      <div class="kpi"><div class="l">Total submissions</div><div class="v" id="kTotal">—</div><div class="s">All-time</div></div>
+      <div class="kpi"><div class="l">This week</div><div class="v" id="kWeek">—</div><div class="s">Last 7 days</div></div>
+      <div class="kpi"><div class="l">Multi-location</div><div class="v" id="kMulti">—</div><div class="s">2+ locations</div></div>
+      <div class="kpi"><div class="l">Avg retention goal</div><div class="v" id="kRet">—</div><div class="s">Points lift</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="block" style="padding-top:0">
+  <div class="wrap">
+    <div class="analytics-grid">
+      <div class="an-card">
+        <h3>Where revenue is leaking (across all clients)</h3>
+        <div id="painChart"></div>
+      </div>
+      <div class="an-card">
+        <h3>Most-offered treatments</h3>
+        <div id="serviceChart"></div>
+      </div>
+      <div class="an-card">
+        <h3>Average goals across pipeline</h3>
+        <div class="goal-grid" id="goalGrid">
+          <div class="goal"><div class="v" id="gRet">—</div><div class="l">retention pts</div></div>
+          <div class="goal"><div class="v" id="gNs">—</div><div class="l">no-show ↓</div></div>
+          <div class="goal"><div class="v" id="gHrs">—</div><div class="l">hrs/wk back</div></div>
+        </div>
+      </div>
+      <div class="an-card">
+        <h3>Current booking systems</h3>
+        <div id="bookingChart"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SUBMISSIONS ═════════════════════════════════════════════ -->
+<section class="block" style="padding-top:8px">
+  <div class="wrap">
+    <div class="sec-head">
+      <div>
+        <span class="mono">Inbound</span>
+        <h2>Submissions</h2>
+      </div>
+    </div>
+    <div class="toolbar">
+      <input type="search" id="searchInput" placeholder="Search by spa name, city, contact, email…" />
+    </div>
+    <div id="subsArea"></div>
+  </div>
+</section>
+
+<!-- ══ DETAIL DRAWER ═══════════════════════════════════════════ -->
+<div class="drawer" id="drawer">
+  <div class="drawer-panel">
+    <div class="drawer-hd">
+      <div>
+        <div class="ttl" id="dTitle">—</div>
+        <div class="sub" id="dSub">—</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-danger" id="btnDelete">Delete</button>
+        <button class="btn btn-ghost" id="btnClose">Close ✕</button>
+      </div>
+    </div>
+    <div class="drawer-body">
+      <div class="tabs">
+        <button class="tabbtn active" data-tab="advisor">AI advisor</button>
+        <button class="tabbtn" data-tab="profile">Full profile</button>
+        <button class="tabbtn" data-tab="raw">Raw JSON</button>
+      </div>
+
+      <div class="tab-pane active" id="tab-advisor">
+        <div class="advisor-card">
+          <h3>How AIKAB delivers for this client</h3>
+          <div class="desc">Claude reads their full profile and writes a concrete plan — recommended setup, modules to activate, a 30/60/90 day plan, expected impact, and watch-outs.</div>
+          <button class="btn btn-primary" id="btnAdvise">✨ Generate recommendation</button>
+        </div>
+        <div class="advice" id="adviceBox">Click the button above to generate a tailored AIKAB rollout plan for this client.</div>
+        <div class="advice-meta" id="adviceMeta"></div>
+      </div>
+
+      <div class="tab-pane" id="tab-profile">
+        <div id="profileArea"></div>
+      </div>
+
+      <div class="tab-pane" id="tab-raw">
+        <pre style="background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:16px;font-family:var(--mono);font-size:11.5px;line-height:1.6;overflow:auto;max-height:60vh;margin:0" id="rawArea"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastIcon">✓</span><span id="toastMsg">Saved</span></div>
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   AIKAB Admin Panel
+   ═══════════════════════════════════════════════════════════════ */
+
+const TOKEN_KEY = 'aikab_admin_token';
+let token = sessionStorage.getItem(TOKEN_KEY) || '';
+let submissions = [];
+let activeSub = null;
+
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+
+/* ── Toast ─────────────────────────────────────────────────── */
+let tt;
+function toast(msg, icon='✓'){
+  $('toastMsg').textContent = msg;
+  $('toastIcon').textContent = icon;
+  $('toast').classList.add('show');
+  clearTimeout(tt); tt = setTimeout(()=>$('toast').classList.remove('show'), 3000);
+}
+
+/* ── Login gate ────────────────────────────────────────────── */
+async function tryToken(t){
+  const r = await fetch('/api/submissions', { headers: { 'x-admin-token': t } });
+  if (r.ok) {
+    const data = await r.json();
+    token = t;
+    sessionStorage.setItem(TOKEN_KEY, t);
+    $('gate').style.display = 'none';
+    submissions = data.submissions || [];
+    render();
+    return true;
+  }
+  const j = await r.json().catch(()=>({}));
+  throw new Error(j.error || ('HTTP '+r.status));
+}
+
+$('gateGo').addEventListener('click', async ()=>{
+  const t = $('tokenInput').value.trim();
+  if (!t) { $('gateErr').textContent = 'Token cannot be empty.'; return; }
+  $('gateErr').textContent = '';
+  $('gateGo').disabled = true; $('gateGo').textContent = 'Checking…';
+  try { await tryToken(t); }
+  catch (e) { $('gateErr').textContent = e.message; $('gateGo').disabled = false; $('gateGo').textContent = 'Unlock dashboard →'; }
+});
+$('tokenInput').addEventListener('keydown', (e)=>{ if (e.key==='Enter') $('gateGo').click(); });
+
+$('btnLogout').addEventListener('click', ()=>{
+  sessionStorage.removeItem(TOKEN_KEY); token=''; location.reload();
+});
+$('btnRefresh').addEventListener('click', async ()=>{
+  $('btnRefresh').disabled = true;
+  try { await tryToken(token); toast('Refreshed','↻'); }
+  catch(e){ toast(e.message,'⚠️'); }
+  $('btnRefresh').disabled = false;
+});
+
+if (token) {
+  tryToken(token).catch(()=>{ /* fall through to gate */ });
+}
+
+/* ── Analytics rendering ──────────────────────────────────── */
+function countBy(items, fn){
+  const m = new Map();
+  for (const it of items) {
+    const v = fn(it);
+    if (v == null) continue;
+    if (Array.isArray(v)) v.forEach(x => x && m.set(x, (m.get(x)||0)+1));
+    else m.set(v, (m.get(v)||0)+1);
+  }
+  return [...m.entries()].sort((a,b)=>b[1]-a[1]);
+}
+
+function renderBarChart(el, entries, opts={}){
+  const max = Math.max(1, ...entries.map(e=>e[1]));
+  el.innerHTML = entries.slice(0, opts.limit || 10).map(([label, n])=>`
+    <div class="bar-row">
+      <span class="bl" title="${esc(label)}">${esc(label)}</span>
+      <span class="bt"><span class="bf" style="width:${(n/max*100).toFixed(0)}%"></span></span>
+      <span class="bn">${n}</span>
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:12px">No data yet.</div>';
+  // animate fills
+  requestAnimationFrame(()=> {
+    el.querySelectorAll('.bf').forEach((f,i)=>{
+      setTimeout(()=>{ /* width already set by inline style; transition fires */ }, i*40);
+    });
+  });
+}
+
+function renderAnalytics(){
+  const total = submissions.length;
+  $('kTotal').textContent = total;
+  const weekAgo = Date.now() - 7*24*3600*1000;
+  $('kWeek').textContent = submissions.filter(s => new Date(s.submittedAt).getTime() > weekAgo).length;
+  $('kMulti').textContent = submissions.filter(s => {
+    const l = s.data?.spa?.locations;
+    return l && l !== '1';
+  }).length;
+
+  const rets = submissions.map(s => +s.data?.goals?.retention).filter(n=>!isNaN(n));
+  const avgRet = rets.length ? Math.round(rets.reduce((a,b)=>a+b,0)/rets.length) : 0;
+  $('kRet').textContent = avgRet ? ('+'+avgRet) : '—';
+  $('gRet').textContent = avgRet ? ('+'+avgRet) : '—';
+
+  const nss = submissions.map(s => +s.data?.goals?.noshow).filter(n=>!isNaN(n));
+  $('gNs').textContent = nss.length ? Math.round(nss.reduce((a,b)=>a+b,0)/nss.length) + '%' : '—';
+
+  const hrs = submissions.map(s => +s.data?.goals?.hours).filter(n=>!isNaN(n));
+  $('gHrs').textContent = hrs.length ? Math.round(hrs.reduce((a,b)=>a+b,0)/hrs.length) : '—';
+
+  renderBarChart($('painChart'),    countBy(submissions, s => s.data?.pains?.list), {limit:8});
+  renderBarChart($('serviceChart'), countBy(submissions, s => s.data?.services?.list), {limit:8});
+  renderBarChart($('bookingChart'), countBy(submissions, s => s.data?.stack?.booking), {limit:8});
+}
+
+/* ── Submissions list ─────────────────────────────────────── */
+function renderSubsList(){
+  const q = ($('searchInput').value || '').toLowerCase().trim();
+  const filtered = submissions.filter(s => {
+    if (!q) return true;
+    const hay = JSON.stringify(s.data || {}).toLowerCase();
+    return hay.includes(q);
+  });
+  const area = $('subsArea');
+  if (!filtered.length) {
+    area.innerHTML = `<div class="empty">
+      <h3>${submissions.length ? 'No matches' : 'No submissions yet'}</h3>
+      <div style="font-size:13px">${submissions.length ? 'Try a different search.' : 'When clients submit the onboarding form, they show up here.'}</div>
+    </div>`;
+    return;
+  }
+  area.innerHTML = `<div class="submissions">${filtered.map((s, idx)=>{
+    const d = s.data || {};
+    const name = d.contact?.name || '—';
+    const spa  = d.spa?.name || 'unnamed spa';
+    const city = d.spa?.city || '';
+    const dt   = new Date(s.submittedAt).toLocaleString();
+    const pains = (d.pains?.list || []).slice(0, 3);
+    return `<div class="sub" data-i="${submissions.indexOf(s)}">
+      <div class="st">
+        <span class="nm">${esc(spa)}</span>
+        <span class="dt">${esc(dt)}</span>
+      </div>
+      <div class="meta">
+        <span><b>${esc(name)}</b> · ${esc(d.contact?.role || '')}</span>
+        ${city ? `<span>📍 ${esc(city)}</span>` : ''}
+        ${d.spa?.locations ? `<span>${esc(d.spa.locations)} location${d.spa.locations==='1'?'':'s'}</span>` : ''}
+      </div>
+      ${pains.length ? `<div class="pains">${pains.map(p=>`<span class="pain-chip">${esc(p)}</span>`).join('')}${(d.pains?.list?.length||0)>3?`<span class="pain-chip" style="background:var(--surface-3);color:var(--muted)">+${d.pains.list.length-3}</span>`:''}</div>` : ''}
+    </div>`;
+  }).join('')}</div>`;
+
+  area.querySelectorAll('.sub').forEach(card => {
+    card.addEventListener('click', ()=> openDrawer(+card.dataset.i));
+  });
+}
+$('searchInput').addEventListener('input', renderSubsList);
+
+function render(){ renderAnalytics(); renderSubsList(); }
+
+/* ── Drawer / detail ──────────────────────────────────────── */
+function openDrawer(i){
+  activeSub = submissions[i];
+  if (!activeSub) return;
+  const d = activeSub.data || {};
+  $('dTitle').textContent = d.spa?.name || 'unnamed spa';
+  $('dSub').textContent = `${d.contact?.name || '—'} · ${d.contact?.email || '—'} · submitted ${new Date(activeSub.submittedAt).toLocaleString()}`;
+  $('rawArea').textContent = JSON.stringify(activeSub, null, 2);
+  $('profileArea').innerHTML = renderProfile(d);
+  $('adviceBox').innerHTML = 'Click <b>Generate recommendation</b> to have Claude write a tailored AIKAB rollout plan for this client.';
+  $('adviceBox').classList.remove('loading');
+  $('adviceMeta').textContent = '';
+  $('btnAdvise').disabled = false; $('btnAdvise').textContent = '✨ Generate recommendation';
+  // reset tabs
+  document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b.dataset.tab==='advisor'));
+  document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id==='tab-advisor'));
+  $('drawer').classList.add('open');
+}
+$('btnClose').addEventListener('click', ()=> $('drawer').classList.remove('open'));
+$('drawer').addEventListener('click', (e)=>{ if (e.target===$('drawer')) $('drawer').classList.remove('open'); });
+document.addEventListener('keydown', (e)=>{ if (e.key==='Escape') $('drawer').classList.remove('open'); });
+
+document.querySelectorAll('.tabbtn').forEach(btn => {
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tabbtn').forEach(b => b.classList.toggle('active', b===btn));
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.toggle('active', p.id==='tab-'+btn.dataset.tab));
+  });
+});
+
+/* ── Delete ───────────────────────────────────────────────── */
+$('btnDelete').addEventListener('click', async ()=>{
+  if (!activeSub) return;
+  if (!confirm('Delete this submission? This cannot be undone.')) return;
+  try {
+    const url = activeSub._blobUrl;
+    const r = await fetch('/api/submissions?url=' + encodeURIComponent(url), {
+      method:'DELETE', headers:{'x-admin-token':token}
+    });
+    if (!r.ok) { const j = await r.json().catch(()=>({})); throw new Error(j.error || ('HTTP '+r.status)); }
+    submissions = submissions.filter(s => s !== activeSub);
+    activeSub = null;
+    $('drawer').classList.remove('open');
+    render();
+    toast('Submission deleted','🗑️');
+  } catch (e) { toast('Delete failed: '+e.message, '⚠️'); }
+});
+
+/* ── Profile rendering ────────────────────────────────────── */
+function row(k,v){ if (v==null || v==='' || (Array.isArray(v)&&!v.length)) return ''; return `<div class="row"><span class="k">${esc(k)}</span><span class="v">${Array.isArray(v)?esc(v.join(', ')):esc(v)}</span></div>`; }
+function section(title, rows){
+  const inner = rows.join('');
+  if (!inner.trim()) return '';
+  return `<div class="profile-section"><h4>${title}</h4><div class="kv">${inner}</div></div>`;
+}
+function renderProfile(d){
+  return [
+    section('The spa', [
+      row('Name', d.spa?.name),
+      row('Location', d.spa?.city),
+      row('Years open', d.spa?.age),
+      row('Locations', d.spa?.locations),
+      row('Revenue band', d.spa?.revenue),
+    ]),
+    section('Team', [
+      row('Team size', d.team?.size),
+      row('Roles', d.team?.roles),
+    ]),
+    section('Services', [
+      row('Treatments offered', d.services?.list),
+      row('Packages / memberships', d.services?.packages),
+    ]),
+    section('Current stack', [
+      row('Booking system', d.stack?.booking),
+      row('EMR / charting', d.stack?.emr),
+      row('Marketing today', d.stack?.marketing),
+      row('Client messaging', d.stack?.messaging),
+      row('Biggest frustration', d.stack?.frustration),
+    ]),
+    section('Pain points (ranked)', [
+      row('Ranked', d.pains?.list),
+    ]),
+    section('Goals', [
+      row('Retention lift target', d.goals?.retention!=null ? `+${d.goals.retention} pts` : null),
+      row('No-show reduction target', d.goals?.noshow!=null ? `${d.goals.noshow}%` : null),
+      row('Admin hours back', d.goals?.hours!=null ? `${d.goals.hours} hrs/wk` : null),
+      row('Timeline', d.goals?.timeline),
+      row('Dream outcome', d.goals?.notes),
+    ]),
+    section('Scale', [
+      row('Active contacts', d.volume?.contacts),
+      row('Appointments / month', d.volume?.appts),
+      row('Expected message volume', d.volume?.messaging),
+    ]),
+    section('Contact', [
+      row('Name', d.contact?.name),
+      row('Role', d.contact?.role),
+      row('Email', d.contact?.email),
+      row('Phone', d.contact?.phone),
+      row('Best time', d.contact?.besttime),
+    ]),
+  ].join('');
+}
+
+/* ── AI advisor ───────────────────────────────────────────── */
+$('btnAdvise').addEventListener('click', async ()=>{
+  if (!activeSub) return;
+  $('btnAdvise').disabled = true; $('btnAdvise').textContent = 'Thinking…';
+  $('adviceBox').classList.add('loading');
+  $('adviceBox').innerHTML = '<span class="spinner"></span> Claude is reading the profile and writing a recommendation… (~15–30s)';
+  $('adviceMeta').textContent = '';
+  try {
+    const r = await fetch('/api/advise', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', 'x-admin-token': token },
+      body: JSON.stringify({ profile: activeSub.data }),
+    });
+    if (!r.ok) { const j = await r.json().catch(()=>({})); throw new Error(j.error || ('HTTP '+r.status)); }
+    const out = await r.json();
+    $('adviceBox').classList.remove('loading');
+    $('adviceBox').innerHTML = mdToHtml(out.advice || '(no content)');
+    const u = out.usage || {};
+    const cache = u.cache_read_input_tokens ? ` · cache read ${u.cache_read_input_tokens} tok` : '';
+    $('adviceMeta').textContent = `${out.model || ''} · ${u.input_tokens||0} in / ${u.output_tokens||0} out${cache}`;
+    toast('Recommendation ready','✨');
+  } catch (e) {
+    $('adviceBox').classList.remove('loading');
+    $('adviceBox').innerHTML = `<div style="color:var(--danger)">Couldn't generate: ${esc(e.message)}</div>
+      <div style="color:var(--muted);font-size:12px;margin-top:8px">Make sure <code>ANTHROPIC_API_KEY</code> is set on the Vercel deployment.</div>`;
+    toast('Advice failed: '+e.message,'⚠️');
+    $('btnAdvise').disabled = false; $('btnAdvise').textContent = '✨ Generate recommendation';
+    return;
+  }
+  $('btnAdvise').disabled = false; $('btnAdvise').textContent = '↻ Regenerate';
+});
+
+/* ── Tiny Markdown → HTML renderer ───────────────────────── */
+function mdToHtml(md){
+  // Escape first
+  let s = esc(md);
+  // headings
+  s = s.replace(/^### (.+)$/gm, '<h3>$1</h3>')
+       .replace(/^## (.+)$/gm,  '<h2>$1</h2>')
+       .replace(/^# (.+)$/gm,   '<h1>$1</h1>');
+  // bold + italic + inline code
+  s = s.replace(/\*\*([^*\n]+)\*\*/g, '<strong>$1</strong>')
+       .replace(/(^|[^*])\*([^*\n]+)\*/g, '$1<em>$2</em>')
+       .replace(/`([^`\n]+)`/g, '<code>$1</code>');
+  // lists — group consecutive bullet lines into a <ul>
+  const lines = s.split('\n');
+  const out = [];
+  let inList = false, inOl = false;
+  for (const line of lines) {
+    const ulMatch = /^[-*+]\s+(.+)$/.exec(line);
+    const olMatch = /^\d+\.\s+(.+)$/.exec(line);
+    if (ulMatch) {
+      if (!inList) { out.push('<ul>'); inList = true; }
+      out.push(`<li>${ulMatch[1]}</li>`);
+    } else if (olMatch) {
+      if (!inOl) { out.push('<ol>'); inOl = true; }
+      out.push(`<li>${olMatch[1]}</li>`);
+    } else {
+      if (inList) { out.push('</ul>'); inList = false; }
+      if (inOl)   { out.push('</ol>'); inOl   = false; }
+      out.push(line);
+    }
+  }
+  if (inList) out.push('</ul>');
+  if (inOl)   out.push('</ol>');
+  s = out.join('\n');
+  // paragraphs (group runs of non-tagged lines)
+  s = s.split(/\n{2,}/).map(block => {
+    const t = block.trim();
+    if (!t) return '';
+    if (/^<(h\d|ul|ol|li|p|pre|blockquote|hr|table|strong|em|code)/i.test(t)) return t;
+    return '<p>' + t.replace(/\n/g, '<br/>') + '</p>';
+  }).join('\n');
+  return s;
+}
+</script>
+</body>
+</html>
