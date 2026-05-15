@@ -437,12 +437,24 @@ footer .fcols{display:flex;gap:30px;font-size:13px;flex-wrap:wrap}
 .reveal{opacity:0;transform:translateY(22px);transition:opacity .7s ease,transform .7s ease}
 .reveal.in{opacity:1;transform:none}
 
+/* iPhone SE / very narrow */
+@media(max-width:380px){
+  .hero h1{font-size:26px}
+  .wiz-panel h3{font-size:20px}
+  .feat-copy h3{font-size:20px}
+  .phone{width:180px}
+  .phone-screen{height:320px}
+  .nav-links{display:none !important}
+}
 /* ── Mobile (≤ 640px) ───────────────────────────────────────── */
 @media(max-width:640px){
   body{font-size:14px}
   h1{font-size:30px}
   h2{font-size:24px}
   .wrap{padding:0 16px}
+  /* Prevent iOS Safari from zooming on focus — inputs must be ≥ 16px */
+  input[type=text],input[type=email],input[type=tel],input[type=number],
+  textarea,select{font-size:16px !important}
   .nav-inner{padding:10px 16px}
   .brand-name{font-size:14px}
   .hero{padding:44px 0 30px}
@@ -474,7 +486,8 @@ footer .fcols{display:flex;gap:30px;font-size:13px;flex-wrap:wrap}
   .opt .ttl{font-size:13.5px}
   .opt .desc{font-size:11.5px}
   .optgrid{gap:9px}
-  .chip{padding:10px 14px; font-size:13px}
+  .chip{padding:11px 14px; font-size:13px; min-height:40px; align-items:center}
+  .opt{min-height:54px}
   .rank-item{padding:11px 12px}
   .rank-item .rk-txt .t{font-size:13.5px}
   .rank-item .rk-txt .d{font-size:11.5px}

@@ -3,11 +3,15 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "description": "AIKAB client onboarding form + admin panel (Vercel static site + serverless functions)",
+  "description": "AIKAB client onboarding form + admin panel (Express on Railway, no database)",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
-    "dev": "vercel dev"
+    "start": "node server.js",
+    "dev": "node server.js"
   },
   "dependencies": {
-    "@vercel/blob": "^1.1.1"
+    "express": "^4.21.2"
   }
 }

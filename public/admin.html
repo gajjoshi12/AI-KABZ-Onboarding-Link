@@ -173,14 +173,88 @@ section.block{padding:clamp(24px,4vw,40px) 0}
   display:flex;align-items:center;gap:8px;max-width:90vw}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
-@media(max-width:600px){
+/* ── Mobile (≤ 640px) ───────────────────────────────────────── */
+@media(max-width:640px){
   body{font-size:13.5px}
   h2{font-size:22px}
-  .kpi .v{font-size:24px}
+  .wrap{padding:0 14px}
+
+  /* Prevent iOS zoom-on-focus by keeping inputs ≥ 16px */
+  input,textarea,select{font-size:16px !important}
+
+  .nav-inner{padding:11px 14px; gap:8px}
+  .brand{font-size:13px}
+  .brand-tag{font-size:9px; padding:2px 7px}
+  .nav-actions .btn{padding:7px 11px; font-size:12px}
+
+  section.block{padding:24px 0}
+  .sec-head{margin-bottom:16px}
+
+  /* KPIs — 2 across on phones, smaller text */
+  .kpis{grid-template-columns:repeat(2,1fr); gap:9px}
+  .kpi{padding:13px 14px}
+  .kpi .v{font-size:22px}
+  .kpi .s{font-size:11px}
+  .kpi .l{font-size:9.5px}
+
+  /* Charts — bars need more room for the label */
+  .analytics-grid{gap:14px}
+  .an-card{padding:14px 16px}
+  .an-card h3{font-size:15px; margin-bottom:10px}
+  .bar-row{gap:8px; font-size:12px}
+  .bar-row .bl{max-width:42%}
+  .bar-row .bt{width:38%}
+  .goal-grid{gap:8px}
+  .goal{padding:10px 8px}
+  .goal .v{font-size:20px}
+  .goal .l{font-size:10px}
+
+  /* Toolbar input full-width */
+  .toolbar{flex-direction:column; align-items:stretch}
+  .toolbar input{width:100%}
+
+  /* Submissions cards */
+  .submissions{grid-template-columns:1fr}
+  .sub{padding:13px 14px}
+  .sub .nm{font-size:15px}
+  .sub .dt{font-size:9.5px}
+  .sub .meta{gap:8px; font-size:11.5px}
+  .pain-chip{font-size:10px; padding:2px 7px}
+
+  /* Drawer — full width, header wraps title + actions */
   .drawer-panel{max-width:100%}
-  .nav-actions .btn{padding:7px 12px;font-size:12px}
-  .kv .row{flex-direction:column;gap:0}
-  .kv .row .k{min-width:0;font-size:11px}
+  .drawer-hd{padding:12px 14px; flex-wrap:wrap; gap:8px}
+  .drawer-hd .ttl{font-size:17px}
+  .drawer-hd .sub{font-size:11px}
+  .drawer-hd > div:last-child{width:100%; justify-content:flex-end}
+  .drawer-body{padding:18px 14px}
+  .tabs{margin:-6px -2px 16px; overflow-x:auto; flex-wrap:nowrap}
+  .tabbtn{padding:9px 12px; font-size:12.5px; white-space:nowrap}
+
+  /* Profile rows stack key/value vertically */
+  .profile-section h4{font-size:10px}
+  .kv{padding:11px 13px}
+  .kv .row{flex-direction:column; gap:1px; font-size:12.5px}
+  .kv .row .k{min-width:0; font-size:11px}
+
+  /* Login gate */
+  .gate{padding:14px}
+  .gate-card{padding:28px 22px}
+  .gate-card h1{font-size:24px}
+  .gate-card p{font-size:12.5px}
+
+  /* Toast doesn't touch screen edges */
+  .toast{left:14px; right:14px; transform:translateY(100px); bottom:16px;
+    max-width:none; justify-content:center}
+  .toast.show{transform:translateY(0)}
+}
+
+/* iPhone SE / tiny screens */
+@media(max-width:380px){
+  .kpis{grid-template-columns:1fr 1fr; gap:8px}
+  .kpi .v{font-size:20px}
+  .nav-actions .btn{padding:6px 9px; font-size:11.5px}
+  .brand-tag{display:none}
 }
 </style>
 </head>
@@ -196,8 +270,8 @@ section.block{padding:clamp(24px,4vw,40px) 0}
     <div class="gate-err" id="gateErr"></div>
     <button class="btn btn-primary" id="gateGo" style="width:100%;justify-content:center;margin-top:14px">Unlock dashboard →</button>
     <div class="gate-help">
-      The token must match the <code>ADMIN_TOKEN</code> env var you set in your Vercel project.
-      Running locally? Set it in <code>.env.local</code> and start <code>vercel dev</code>.
+      The token must match the <code>ADMIN_TOKEN</code> env var you set on your Railway service.
+      Running locally? Run <code>$env:ADMIN_TOKEN="dev-token"; npm start</code> and open <code>localhost:3000/admin</code>.
     </div>
   </div>
 </div>
@@ -503,8 +577,7 @@ $('btnDelete').addEventListener('click', async ()=>{
   if (!activeSub) return;
   if (!confirm('Delete this submission? This cannot be undone.')) return;
   try {
-    const url = activeSub._blobUrl;
-    const r = await fetch('/api/submissions?url=' + encodeURIComponent(url), {
+    const r = await fetch('/api/submissions?id=' + encodeURIComponent(activeSub.id), {
       method:'DELETE', headers:{'x-admin-token':token}
     });
     if (!r.ok) { const j = await r.json().catch(()=>({})); throw new Error(j.error || ('HTTP '+r.status)); }

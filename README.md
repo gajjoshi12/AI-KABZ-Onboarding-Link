@@ -1,17 +1,18 @@
 # AIKAB — Client Onboarding + Admin Panel
 
-Two pages and two serverless functions. No database. Deployed on Vercel.
+A tiny Express server with two HTML pages and three JSON endpoints. **No database.**
+Submissions are saved as plain JSON files to a persistent disk (a Railway Volume in production).
+Both pages are mobile-responsive.
 
 ```
 client-onboarding/
-├─ index.html        ← public onboarding form (mobile responsive)
-├─ admin.html        ← token-protected admin dashboard
-├─ api/
-│  ├─ submit.js      ← POST   — save a submission to Vercel Blob
-│  └─ submissions.js ← GET    — list every submission   (admin-only)
-│                      DELETE — delete one submission   (admin-only)
-├─ package.json
-├─ vercel.json
+├─ public/
+│  ├─ index.html        ← public onboarding form (8-step wizard + animated walkthrough)
+│  └─ admin.html        ← token-gated admin dashboard
+├─ server.js            ← Express app: static + /api/submit + /api/submissions
+├─ package.json         ← express, nothing else
+├─ railway.json         ← health check + start command
+├─ .gitignore           ← ignores data/, node_modules, .env
 └─ README.md
 ```
 
@@ -19,132 +20,176 @@ client-onboarding/
 
 ## What each page does
 
-**`index.html`** — the public form. Mobile-responsive 8-step wizard that collects: spa basics → team → services → current stack → ranked pain points → goals (sliders) → scale → contact. Followed by a 7-tab interactive walkthrough with live animated demos (Smart Follow-Up, No-Show Recovery, Churn Radar, Protocol Tracking, Package Recovery, Marketing Attribution, Dashboard). Submitting calls `/api/submit`. Progress auto-saves to `localStorage`.
+**`/`** — the public form. Mobile-responsive 8-step wizard: spa basics → team → services
+→ current stack → ranked pain points → goals (sliders) → scale → contact. Followed by a
+7-tab interactive walkthrough with animated demos (Smart Follow-Up, No-Show Recovery,
+Churn Radar, Protocol Tracking, Package Recovery, Marketing Attribution, Dashboard).
+Submitting POSTs to `/api/submit`. Progress auto-saves to `localStorage`.
 
-**`admin.html`** — token-gated dashboard at `https://your-domain.com/admin`. Shows:
-- KPI strip (total submissions, this week, multi-location, average retention goal)
-- Aggregate analytics (top pain points, services, average goals, booking systems)
-- Searchable submissions list
-- Per-submission detail drawer with the full profile + raw JSON view + delete
+**`/admin`** — token-gated dashboard. KPI strip, aggregate analytics (top pain points,
+services, average goals, booking systems), searchable submission list, per-submission
+detail drawer with full profile + raw JSON + delete.
 
 ---
 
-## Deploy to Vercel (one-time setup, ~5 minutes)
+## Deploy to Railway (~8 minutes)
 
-### 1. Push to a Git repo
+### 1. Push to your GitHub repo
 
-```bash
-cd client-onboarding
-git init && git add . && git commit -m "AIKAB onboarding + admin"
-# push to GitHub / GitLab / Bitbucket
+```powershell
+cd C:\Users\Gaj\Desktop\Today\AIKAB\client-onboarding
+git add . && git commit -m "AIKAB onboarding for Railway" && git push
 ```
 
-### 2. Import the project on vercel.com
+### 2. Create a Railway project from the repo
 
-- **New Project** → import your repo → Vercel auto-detects this as a static site with `/api` serverless functions. **No framework preset, no build step.**
-- Set the **Root Directory** to `client-onboarding` only if you're committing the wider repo.
+1. Go to <https://railway.com> → **New Project** → **Deploy from GitHub repo**
+2. Authorize Railway on GitHub if needed → pick **AI-KABZ-Onboarding-Link**
+3. Railway auto-detects the Node project (via `package.json`), runs `npm install`, then
+   `npm start`. **No build step to configure.**
 
-### 3. Add a Blob store (this is your "database")
+Wait ~60 seconds for the first deploy. Don't open the URL yet — we still need to set
+the admin token and attach a volume so data survives redeploys.
 
-In your project on Vercel:
-- **Storage → Create Database → Blob** → give it any name.
-- Vercel auto-injects `BLOB_READ_WRITE_TOKEN` as an env var for you. You don't paste anything.
-
-### 4. Set the admin token
-
-Project Settings → Environment Variables (apply to **Production, Preview, Development**):
-
-| Name | Value | What it's for |
-|---|---|---|
-| `ADMIN_TOKEN` | a long random string you choose | Gates `/admin`, `/api/submissions` |
-
-Generate a strong admin token in your terminal:
+### 3. Generate an admin token
 
 ```powershell
 # PowerShell
 [Convert]::ToBase64String([Guid]::NewGuid().ToByteArray() + [Guid]::NewGuid().ToByteArray())
 ```
 
-```bash
-# macOS / Linux
-openssl rand -base64 36
+Copy the output. This is your admin panel password.
+
+### 4. Set environment variables
+
+In your Railway project → click the service → **Variables** tab → **+ New Variable**:
+
+| Name | Value | Purpose |
+|---|---|---|
+| `ADMIN_TOKEN` | the long random string from step 3 | Gates `/admin` + `/api/submissions` |
+| `DATA_DIR` | `/data` | Where submissions get written (matches the volume mount below) |
+
+`PORT` is injected by Railway automatically — do **not** set it yourself.
+
+### 5. Attach a persistent volume
+
+This is the "database" — actually just a disk that survives redeploys.
+
+1. Project → your service → **Settings** tab → scroll to **Volumes** → **+ New Volume**
+2. **Mount path:** `/data`   *(must exactly match the `DATA_DIR` env var)*
+3. **Size:** 1 GB is plenty for tens of thousands of submissions → **Create**
+
+Railway will redeploy the service so the volume can attach.
+
+### 6. Get the public URL
+
+Project → service → **Settings** → **Networking** → **Generate Domain**.
+You'll get something like `aikabz-onboarding-production.up.railway.app`.
+
+### 7. Test it
+
+| URL | What to do |
+|---|---|
+| `https://<your-domain>/`       | Fill the wizard. Last step → click **📨 Send to AIKAB team**. Green toast: `Sent to AIKAB — ref sub_…` |
+| `https://<your-domain>/admin`  | Paste your `ADMIN_TOKEN` → see analytics + your submission. Click it for full profile, raw JSON, delete |
+
+### Future updates
+
+Every `git push` to `main` auto-redeploys. The volume + env vars stick around between deploys.
+
+```powershell
+cd C:\Users\Gaj\Desktop\Today\AIKAB\client-onboarding
+# make changes
+git add . && git commit -m "tweak: ..." && git push
 ```
-
-### 5. Deploy
-
-Push to your default branch (or click **Redeploy** in the dashboard). Vercel installs `@vercel/blob` from `package.json` and serves both HTML pages as static assets.
-
-You now have:
-- `https://your-domain.com/`        — public onboarding form
-- `https://your-domain.com/admin`   — token-gated dashboard (paste your `ADMIN_TOKEN`)
 
 ---
 
 ## Local development
 
-```bash
-npm install -g vercel
-cd client-onboarding
+```powershell
+cd C:\Users\Gaj\Desktop\Today\AIKAB\client-onboarding
 npm install
-# put your env vars in .env.local (NEVER commit this file)
-echo "ADMIN_TOKEN=dev-token-12345" > .env.local
-# Vercel Blob env vars get pulled when you link the project:
-vercel link    # connect this folder to a Vercel project
-vercel env pull .env.local   # pulls BLOB_READ_WRITE_TOKEN
-vercel dev     # local server with the API routes wired up
+$env:ADMIN_TOKEN="dev-token-12345"
+npm start
 ```
 
-Then open <http://localhost:3000> and <http://localhost:3000/admin>.
+Open <http://localhost:3000> and <http://localhost:3000/admin>. Submissions land in a
+local `./data/submissions/` folder (gitignored). To start fresh, just delete the folder.
 
 ---
 
-## How the no-database flow works
+## How the flow works
 
 ```
-   Client                    Vercel                    Admin
-   ──────                    ──────                    ─────
-   index.html                                          admin.html
-     │                                                   │
-     │  POST /api/submit                                 │
-     │ ─────────────────────►  submit.js                 │
-     │                          └─► Vercel Blob          │
-     │                              submissions/sub_X.json
-     │ ◄─ {ok:true, id}                                  │
-                                                         │
-                                                         │  GET /api/submissions
-                                                         │  (x-admin-token header)
-                                            list() ◄───── │
-                                            ┌──┘          │
-                                            ▼          ◄─ list of JSON records
-                                       Blob lists every
-                                       sub_*.json, the
-                                       admin fetches each
+   Browser                       Railway container                Browser
+   ───────                       ─────────────────                ───────
+   /                                                              /admin
+     │                                                              │
+     │  POST /api/submit                                            │
+     │ ─────────────────────►  Express                              │
+     │                          └─► fs.writeFile(                   │
+     │                                /data/submissions/sub_X.json  │
+     │                              )                               │
+     │ ◄─ { ok:true, id }                                           │
+                                                                    │  GET /api/submissions
+                                                                    │  (x-admin-token header)
+                                                       readdir() ◄──┘
+                                                          │
+                                                          ▼
+                                                  list of JSON records
+                                                          │
+                                                          └─► drawer detail
+                                                              + delete
 ```
 
-- **Submissions** are individual JSON files in Vercel Blob storage (object storage — not a database). Each filename ends with a random suffix so URLs aren't guessable; listing and reading them goes through the token-protected admin endpoint.
-- **Admin auth** is a single shared `ADMIN_TOKEN` checked in the `x-admin-token` header — simple, no user accounts to manage.
+- **Submissions** are individual JSON files on the mounted volume. Railway snapshots the
+  volume automatically; resizing later is also one click.
+- **Admin auth** is a single shared `ADMIN_TOKEN` checked in the `x-admin-token` header.
+- **No serverless gotchas** — this is a long-running container, so cold starts and
+  10-second function limits don't apply.
+
+---
+
+## Mobile responsiveness
+
+Both pages have explicit `@media(max-width:640px)` + `@media(max-width:380px)` blocks:
+- Inputs are forced to ≥16px font-size to stop iOS Safari zooming on focus
+- Tap targets on chips and option cards are ≥40px tall
+- Walkthrough tabs scroll horizontally instead of cramming
+- KPI grid collapses 4→2 (or 1 on iPhone SE), drawer takes the full screen
+- Profile rows stack key/value vertically; analytics bars shrink labels
+- Toasts respect screen edges
+
+Test on a real phone after deploying — DevTools mobile emulation only catches ~80% of issues.
 
 ---
 
 ## Costs
 
-| Thing | Cost on Hobby tier |
-|---|---|
-| Static hosting + serverless functions | Free |
-| Vercel Blob storage | Free tier covers thousands of submissions |
+Railway's Hobby plan: $5/month gives you 8 GB RAM + 8 vCPU + $5 of usage credit. This
+app uses <1% of that — Hobby covers thousands of submissions per month easily.
 
 ---
 
 ## Customization pointers
 
-- **Change the form questions** — edit the wizard panels in `index.html` (each `<div class="wiz-panel" data-step="N">`). State persists by `data-k="path.to.field"`.
-- **Rotate the admin token** — change `ADMIN_TOKEN` in Vercel and the next admin login uses the new one.
-- **Email submissions to your team too** — the form already has an "Email it" button that opens the user's email app pre-filled. To do it server-side, add SendGrid/Resend in `api/submit.js` after the `put()` call.
+- **Change the form questions** — edit the wizard panels in [public/index.html](public/index.html)
+  (each `<div class="wiz-panel" data-step="N">`). State persists by `data-k="path.to.field"`.
+- **Rotate the admin token** — change `ADMIN_TOKEN` in Railway → the service redeploys → next
+  admin login uses the new value.
+- **Email submissions to your team too** — the form already has an "Email it" button that
+  opens the user's mail app. To do it server-side, add SendGrid/Resend in `server.js`
+  after the `fs.writeFile()` call.
+- **Bigger volume later** — Railway → Volumes → resize. Data is preserved.
 
 ---
 
 ## Security notes
 
-- Submissions contain PII (name, email, phone). Blobs are public-URL-with-random-suffix — practically unguessable, but if you need true privacy upgrade to Vercel Blob's private access mode or move to Vercel KV / Postgres.
-- The admin token is a single shared secret. If multiple teammates need access, give each one their own and check a set of tokens instead of one.
-- Never commit `.env.local` or your tokens.
+- Submissions contain PII (name, email, phone). The volume is private to your service —
+  only your container reads it; nothing is publicly accessible without the admin token.
+- The admin token is a single shared secret. For multiple teammates, give each one their
+  own and check a set of tokens in `adminGate()` instead of one.
+- Never commit `.env`, `.env.local`, or your tokens.
+- `app.disable('x-powered-by')` is on so we don't advertise the server stack.
